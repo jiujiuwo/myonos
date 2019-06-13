@@ -546,6 +546,11 @@ public class IntentTestsMocks {
         }
 
         @Override
+        public String getHsString() {
+            return null;
+        }
+
+        @Override
         public int tableId() {
             return tableId.id();
         }

@@ -144,6 +144,11 @@ public class FlowEntryAdapter implements FlowEntry {
     }
 
     @Override
+    public String getHsString() {
+        return null;
+    }
+
+    @Override
     public FlowRuleExtPayLoad payLoad() {
         return null;
     }
