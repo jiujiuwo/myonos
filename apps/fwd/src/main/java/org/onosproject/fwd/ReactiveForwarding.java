@@ -41,13 +41,7 @@ import org.onosproject.net.HostId;
 import org.onosproject.net.Link;
 import org.onosproject.net.Path;
 import org.onosproject.net.PortNumber;
-import org.onosproject.net.flow.DefaultTrafficSelector;
-import org.onosproject.net.flow.DefaultTrafficTreatment;
-import org.onosproject.net.flow.FlowEntry;
-import org.onosproject.net.flow.FlowRule;
-import org.onosproject.net.flow.FlowRuleService;
-import org.onosproject.net.flow.TrafficSelector;
-import org.onosproject.net.flow.TrafficTreatment;
+import org.onosproject.net.flow.*;
 import org.onosproject.net.flow.criteria.Criterion;
 import org.onosproject.net.flow.criteria.EthCriterion;
 import org.onosproject.net.flow.instructions.Instruction;
@@ -717,7 +711,9 @@ public class ReactiveForwarding {
                 .setOutput(portNumber)
                 .build();
 
-        ForwardingObjective forwardingObjective = DefaultForwardingObjective.builder()
+        //不使用 ForwardingObjective 来下发规则
+
+/*        ForwardingObjective forwardingObjective = DefaultForwardingObjective.builder()
                 .withSelector(selectorBuilder.build())
                 .withTreatment(treatment)
                 .withPriority(flowPriority)
@@ -727,7 +723,30 @@ public class ReactiveForwarding {
                 .add();
 
         flowObjectiveService.forward(context.inPacket().receivedFrom().deviceId(),
-                                     forwardingObjective);
+                                     forwardingObjective);*/
+
+        FlowRule.Builder flowRuleBuilder = DefaultFlowRule.builder()
+                .forDevice(context.inPacket().receivedFrom().deviceId())
+                .withSelector(selectorBuilder.build())
+                .withTreatment(treatment)
+                .withPriority(flowPriority)
+                .fromApp(appId);
+
+        FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
+        flowOpsBuilder = flowOpsBuilder.add(flowRuleBuilder.build());
+
+        flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
+            @Override
+            public void onSuccess(FlowRuleOperations ops) {
+                log.debug("FlowRule安装成功");
+            }
+
+            @Override
+            public void onError(FlowRuleOperations ops) {
+                log.debug("流规则安装失败");
+            }
+        }));
+
         forwardPacket(macMetrics);
         //
         // If packetOutOfppTable
