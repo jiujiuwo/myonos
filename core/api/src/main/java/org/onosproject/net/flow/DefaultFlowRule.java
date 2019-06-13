@@ -54,6 +54,15 @@ public class DefaultFlowRule implements FlowRule {
     private final TableId tableId;
     private final FlowRuleExtPayLoad payLoad;
 
+    //Header Space属性
+    private String hsString = null;
+
+    //在FlowRule接口中添加了该方法
+    @Override
+    public String getHsString() {
+        return this.hsString;
+    }
+
     /**
      * Creates a new flow rule from an existing rule.
      *
@@ -74,6 +83,9 @@ public class DefaultFlowRule implements FlowRule {
         this.created = System.currentTimeMillis();
         this.tableId = rule.table();
         this.payLoad = rule.payLoad();
+
+        //构造方法中复制hsString属性
+        this.hsString = rule.getHsString();
     }
 
     private DefaultFlowRule(DeviceId deviceId, TrafficSelector selector,
@@ -94,6 +106,8 @@ public class DefaultFlowRule implements FlowRule {
         this.tableId = tableId;
         this.created = System.currentTimeMillis();
 
+        // todo rewrite the toString method
+        this.hsString = selector.toString();
 
         //FIXME: fields below will be removed.
         this.groupId = new GroupId(0);
@@ -162,6 +176,9 @@ public class DefaultFlowRule implements FlowRule {
         this.tableId = DEFAULT_TABLE;
         this.created = System.currentTimeMillis();
         this.payLoad = payLoad;
+
+        // todo rewrite the toString method
+        this.hsString = selector.toString();
 
         /*
          * id consists of the following. | appId (16 bits) | groupId (16 bits) |
@@ -237,6 +254,9 @@ public class DefaultFlowRule implements FlowRule {
         this.created = System.currentTimeMillis();
         this.tableId = DEFAULT_TABLE;
         this.payLoad = payLoad;
+
+        // todo rewrite the toString method
+        this.hsString = selector.toString();
 
         /*
          * id consists of the following. | appId (16 bits) | groupId (16 bits) |

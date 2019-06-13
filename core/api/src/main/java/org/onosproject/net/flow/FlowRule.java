@@ -195,6 +195,11 @@ public interface FlowRule extends PiTranslatable {
      */
     boolean exactMatch(FlowRule rule);
 
+    /*
+        return the HeaderSpace String of the FlowRule
+     */
+    String getHsString();
+
     /**
      * A flowrule builder.
      */

@@ -127,6 +127,7 @@ public class FlowRuleManager
     /** Frequency (in seconds) for polling flow statistics via fallback provider. */
     private int fallbackFlowPollFrequency = POLL_FREQUENCY_DEFAULT;
 
+    //实现存储流表项的内部存储代理类
     private final FlowRuleStoreDelegate delegate = new InternalStoreDelegate();
     private final DeviceListener deviceListener = new InternalDeviceListener();
 
@@ -356,6 +357,7 @@ public class FlowRuleManager
     @Override
     public void apply(FlowRuleOperations ops) {
         checkPermission(FLOWRULE_WRITE);
+        //执行新的流表项添加操作
         operationsService.execute(new FlowOperationsProcessor(ops));
     }
 
@@ -611,6 +613,7 @@ public class FlowRuleManager
         }
     }
 
+    //存储流表项的类的内部实现
     // Store delegate to re-post events emitted from the store.
     private class InternalStoreDelegate implements FlowRuleStoreDelegate {
 
@@ -684,6 +687,7 @@ public class FlowRuleManager
         }
     }
 
+    //内部类实现流表项添加操作
     private class FlowOperationsProcessor implements Runnable {
         // Immutable
         private final FlowRuleOperations fops;
