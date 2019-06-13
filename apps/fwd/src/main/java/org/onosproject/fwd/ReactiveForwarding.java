@@ -730,7 +730,7 @@ public class ReactiveForwarding {
                 .withSelector(selectorBuilder.build())
                 .withTreatment(treatment)
                 .withPriority(flowPriority)
-                .fromApp(appId);
+                .fromApp(appId).withIdleTimeout(10);
 
         FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
         flowOpsBuilder = flowOpsBuilder.add(flowRuleBuilder.build());
@@ -738,12 +738,12 @@ public class ReactiveForwarding {
         flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
             @Override
             public void onSuccess(FlowRuleOperations ops) {
-                log.debug("FlowRule安装成功");
+                log.info("FlowRule安装成功");
             }
 
             @Override
             public void onError(FlowRuleOperations ops) {
-                log.debug("流规则安装失败");
+                log.info("流规则安装失败");
             }
         }));
 
