@@ -161,6 +161,9 @@ public class FlowRuleManager
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected DriverService driverService;
 
+    //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
+    private int algorithmChosen = 0;
+
     @Activate
     public void activate(ComponentContext context) {
         modified(context);
@@ -272,6 +275,7 @@ public class FlowRuleManager
         return store.getFlowEntries(deviceId);
     }
 
+    // 安装流规则的第一个方法，其实调用第二个（apply）方法
     @Override
     public void applyFlowRules(FlowRule... flowRules) {
         checkPermission(FLOWRULE_WRITE);
@@ -354,11 +358,19 @@ public class FlowRuleManager
         return matches;
     }
 
+    //安装流规则的第二个方法，第一个方法（applyFlowRules(FlowRule... flowRules)）调用该方法
     @Override
     public void apply(FlowRuleOperations ops) {
         checkPermission(FLOWRULE_WRITE);
-        //执行新的流表项添加操作
-        operationsService.execute(new FlowOperationsProcessor(ops));
+
+        //执行新的流表项添加操作，
+        if(algorithmChosen==1){
+
+        }else if(algorithmChosen==2){
+
+        }else{
+            operationsService.execute(new FlowOperationsProcessor(ops));
+        }
     }
 
     @Override
