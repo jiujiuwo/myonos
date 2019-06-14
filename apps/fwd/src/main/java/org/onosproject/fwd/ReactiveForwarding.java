@@ -730,7 +730,8 @@ public class ReactiveForwarding {
                 .withSelector(selectorBuilder.build())
                 .withTreatment(treatment)
                 .withPriority(flowPriority)
-                .fromApp(appId).withIdleTimeout(10);
+                .fromApp(appId)
+                .withIdleTimeout(10);
 
         FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
         flowOpsBuilder = flowOpsBuilder.add(flowRuleBuilder.build());
