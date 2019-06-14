@@ -734,11 +734,15 @@ public class ReactiveForwarding {
                 .withIdleTimeout(10);
 
         FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
-        flowOpsBuilder = flowOpsBuilder.add(flowRuleBuilder.build());
+        FlowRule tmpFlowRule = flowRuleBuilder.build();
+        //log.info("header Space String : "+tmpFlowRule.getHsString());
+        flowOpsBuilder = flowOpsBuilder.add(tmpFlowRule);
 
+        //初步感觉，冲突检测的代码应该写在apply函数里面
         flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
             @Override
             public void onSuccess(FlowRuleOperations ops) {
+               // log.info(ops.stages().get(0).)
                 log.info("FlowRule安装成功");
             }
 
