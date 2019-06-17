@@ -97,20 +97,20 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Provides implementation of the flow NB &amp; SB APIs.
  */
 @Component(
-    immediate = true,
-    service = {
-        FlowRuleService.class,
-        FlowRuleProviderRegistry.class
-    },
-    property = {
-        ALLOW_EXTRANEOUS_RULES + ":Boolean=" + ALLOW_EXTRANEOUS_RULES_DEFAULT,
-        PURGE_ON_DISCONNECTION + ":Boolean=" + PURGE_ON_DISCONNECTION_DEFAULT,
-        POLL_FREQUENCY + ":Integer=" + POLL_FREQUENCY_DEFAULT
-    }
+        immediate = true,
+        service = {
+                FlowRuleService.class,
+                FlowRuleProviderRegistry.class
+        },
+        property = {
+                ALLOW_EXTRANEOUS_RULES + ":Boolean=" + ALLOW_EXTRANEOUS_RULES_DEFAULT,
+                PURGE_ON_DISCONNECTION + ":Boolean=" + PURGE_ON_DISCONNECTION_DEFAULT,
+                POLL_FREQUENCY + ":Integer=" + POLL_FREQUENCY_DEFAULT
+        }
 )
 public class FlowRuleManager
         extends AbstractListenerProviderRegistry<FlowRuleEvent, FlowRuleListener,
-                                                 FlowRuleProvider, FlowRuleProviderService>
+        FlowRuleProvider, FlowRuleProviderService>
         implements FlowRuleService, FlowRuleProviderRegistry {
 
     private final Logger log = getLogger(getClass());
@@ -118,13 +118,19 @@ public class FlowRuleManager
     private static final String DEVICE_ID_NULL = "Device ID cannot be null";
     private static final String FLOW_RULE_NULL = "FlowRule cannot be null";
 
-    /** Allow flow rules in switch not installed by ONOS. */
+    /**
+     * Allow flow rules in switch not installed by ONOS.
+     */
     private boolean allowExtraneousRules = ALLOW_EXTRANEOUS_RULES_DEFAULT;
 
-    /** Purge entries associated with a device when the device goes offline. */
+    /**
+     * Purge entries associated with a device when the device goes offline.
+     */
     private boolean purgeOnDisconnection = PURGE_ON_DISCONNECTION_DEFAULT;
 
-    /** Frequency (in seconds) for polling flow statistics via fallback provider. */
+    /**
+     * Frequency (in seconds) for polling flow statistics via fallback provider.
+     */
     private int fallbackFlowPollFrequency = POLL_FREQUENCY_DEFAULT;
 
     //实现存储流表项的内部存储代理类
@@ -193,7 +199,7 @@ public class FlowRuleManager
             readComponentConfiguration(context);
         }
         driverProvider.init(new InternalFlowRuleProviderService(driverProvider),
-                             deviceService, mastershipService, fallbackFlowPollFrequency);
+                deviceService, mastershipService, fallbackFlowPollFrequency);
     }
 
     @Override
@@ -233,17 +239,17 @@ public class FlowRuleManager
         String s = get(properties, POLL_FREQUENCY);
         if (isNullOrEmpty(s)) {
             log.info("fallbackFlowPollFrequency is not configured, " +
-                             "using current value of {} seconds",
-                     fallbackFlowPollFrequency);
+                            "using current value of {} seconds",
+                    fallbackFlowPollFrequency);
         } else {
             try {
                 fallbackFlowPollFrequency = Integer.parseInt(s);
                 log.info("Configured. FallbackFlowPollFrequency is {} seconds",
-                         fallbackFlowPollFrequency);
+                        fallbackFlowPollFrequency);
             } catch (NumberFormatException e) {
                 log.warn("Configured fallbackFlowPollFrequency value '{}' " +
-                                 "is not a number, using current value of {} seconds",
-                         fallbackFlowPollFrequency);
+                                "is not a number, using current value of {} seconds",
+                        fallbackFlowPollFrequency);
             }
         }
     }
@@ -363,14 +369,25 @@ public class FlowRuleManager
     public void apply(FlowRuleOperations ops) {
         checkPermission(FLOWRULE_WRITE);
 
-        //执行新的流表项添加操作，
-        if(algorithmChosen==1){
-
-        }else if(algorithmChosen==2){
-
-        }else{
+        if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
+        } else {
+
+            List<Set<FlowRuleOperation>> stages = ops.stages();
+
+            for (Set<FlowRuleOperation> flowRuleSet : stages) {
+                for (FlowRuleOperation flowRuleOp : flowRuleSet) {
+                    FlowRule tmp = flowRuleOp.rule();
+                    //checkout here
+                    if (algorithmChosen == 1) {
+
+                    } else if (algorithmChosen == 2) {
+
+                    }
+                }
+            }
         }
+
     }
 
     @Override
@@ -395,9 +412,9 @@ public class FlowRuleManager
         // if device supports FlowRuleProgrammable,
         // use FlowRuleProgrammable via FlowRuleDriverProvider
         return Optional.ofNullable(deviceService.getDevice(deviceId))
-                        .filter(dev -> dev.is(FlowRuleProgrammable.class))
-                        .<FlowRuleProvider>map(x -> driverProvider)
-                        .orElseGet(() -> super.getProvider(deviceId));
+                .filter(dev -> dev.is(FlowRuleProgrammable.class))
+                .<FlowRuleProvider>map(x -> driverProvider)
+                .orElseGet(() -> super.getProvider(deviceId));
     }
 
     private class InternalFlowRuleProviderService
@@ -592,7 +609,7 @@ public class FlowRuleManager
                     }
                 } catch (Exception e) {
                     log.warn("Can't process added or extra rule {} for device {}:{}",
-                             rule, deviceId, e);
+                            rule, deviceId, e);
                 }
             }
 
@@ -620,7 +637,7 @@ public class FlowRuleManager
 
         @Override
         public void pushTableStatistics(DeviceId deviceId,
-                                          List<TableStatisticsEntry> tableStats) {
+                                        List<TableStatisticsEntry> tableStats) {
             store.updateTableStatistics(deviceId, tableStats);
         }
     }
@@ -636,52 +653,52 @@ public class FlowRuleManager
         public void notify(FlowRuleBatchEvent event) {
             final FlowRuleBatchRequest request = event.subject();
             switch (event.type()) {
-            case BATCH_OPERATION_REQUESTED:
-                // Request has been forwarded to MASTER Node, and was
-                request.ops().forEach(
-                        op -> {
-                            switch (op.operator()) {
-                                case ADD:
-                                    post(new FlowRuleEvent(RULE_ADD_REQUESTED, op.target()));
-                                    break;
-                                case REMOVE:
-                                    post(new FlowRuleEvent(RULE_REMOVE_REQUESTED, op.target()));
-                                    break;
-                                case MODIFY:
-                                    //TODO: do something here when the time comes.
-                                    break;
-                                default:
-                                    log.warn("Unknown flow operation operator: {}", op.operator());
+                case BATCH_OPERATION_REQUESTED:
+                    // Request has been forwarded to MASTER Node, and was
+                    request.ops().forEach(
+                            op -> {
+                                switch (op.operator()) {
+                                    case ADD:
+                                        post(new FlowRuleEvent(RULE_ADD_REQUESTED, op.target()));
+                                        break;
+                                    case REMOVE:
+                                        post(new FlowRuleEvent(RULE_REMOVE_REQUESTED, op.target()));
+                                        break;
+                                    case MODIFY:
+                                        //TODO: do something here when the time comes.
+                                        break;
+                                    default:
+                                        log.warn("Unknown flow operation operator: {}", op.operator());
+                                }
                             }
-                        }
-                );
+                    );
 
-                DeviceId deviceId = event.deviceId();
-                FlowRuleBatchOperation batchOperation = request.asBatchOperation(deviceId);
-                // getProvider is customized to favor driverProvider
-                FlowRuleProvider flowRuleProvider = getProvider(deviceId);
-                if (flowRuleProvider != null) {
-                    flowRuleProvider.executeBatch(batchOperation);
-                }
-
-                break;
-
-            case BATCH_OPERATION_COMPLETED:
-
-                FlowOperationsProcessor fops = pendingFlowOperations.remove(
-                        event.subject().batchId());
-                if (event.result().isSuccess()) {
-                    if (fops != null) {
-                        fops.satisfy(event.deviceId());
+                    DeviceId deviceId = event.deviceId();
+                    FlowRuleBatchOperation batchOperation = request.asBatchOperation(deviceId);
+                    // getProvider is customized to favor driverProvider
+                    FlowRuleProvider flowRuleProvider = getProvider(deviceId);
+                    if (flowRuleProvider != null) {
+                        flowRuleProvider.executeBatch(batchOperation);
                     }
-                } else {
-                    fops.fail(event.deviceId(), event.result().failedItems());
-                }
 
-                break;
+                    break;
 
-            default:
-                break;
+                case BATCH_OPERATION_COMPLETED:
+
+                    FlowOperationsProcessor fops = pendingFlowOperations.remove(
+                            event.subject().batchId());
+                    if (event.result().isSuccess()) {
+                        if (fops != null) {
+                            fops.satisfy(event.deviceId());
+                        }
+                    } else {
+                        fops.fail(event.deviceId(), event.result().failedItems());
+                    }
+
+                    break;
+
+                default:
+                    break;
             }
         }
     }
@@ -735,7 +752,7 @@ public class FlowRuleManager
             for (DeviceId deviceId : perDeviceBatches.keySet()) {
                 long id = idGenerator.getNewId();
                 final FlowRuleBatchOperation b = new FlowRuleBatchOperation(perDeviceBatches.get(deviceId),
-                                               deviceId, id);
+                        deviceId, id);
                 pendingFlowOperations.put(id, this);
                 deviceInstallers.execute(() -> store.storeBatch(b));
             }

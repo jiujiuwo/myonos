@@ -22,6 +22,7 @@ import com.google.common.hash.Hashing;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.GroupId;
 import org.onosproject.net.DeviceId;
+import org.onosproject.net.flow.criteria.Criterion;
 
 import java.util.Objects;
 
@@ -411,6 +412,21 @@ public class DefaultFlowRule implements FlowRule {
     public static Builder builder() {
         return new Builder();
     }
+
+    /*
+      Translate the selector to HeaderSpace
+     */
+
+    private static String selectorTranslate(TrafficSelector selector){
+
+        // default selector 实现使用 TreeSet结构，所以selector.criteria()是有序的
+        for(Criterion c :selector.criteria()){
+
+        }
+
+        return "";
+    }
+
 
     /**
      * Default flow rule builder.
