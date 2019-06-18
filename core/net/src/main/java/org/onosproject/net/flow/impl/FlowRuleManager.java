@@ -372,8 +372,8 @@ public class FlowRuleManager
         if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
         } else {
-
             List<Set<FlowRuleOperation>> stages = ops.stages();
+            boolean isConflict = false;
 
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
@@ -386,6 +386,14 @@ public class FlowRuleManager
                     }
                 }
             }
+
+            //检测到冲突后，返回错误信息，不安装该流表项集合
+            if (isConflict) {
+                ops.callback().onError(ops);
+            } else {
+                operationsService.execute(new FlowOperationsProcessor(ops));
+            }
+
         }
 
     }
