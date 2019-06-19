@@ -417,12 +417,27 @@ public class DefaultFlowRule implements FlowRule {
       Translate the selector to HeaderSpace
      */
 
-    private static String selectorTranslate(TrafficSelector selector){
+    private String selectorTranslate(TrafficSelector selector){
 
-        // default selector 实现使用 TreeSet结构，所以selector.criteria()是有序的
-        for(Criterion c :selector.criteria()){
+        //获取IP五元组
+        Criterion ipProtocol = this.selector().getCriterion(Criterion.Type.IP_PROTO);
+        //这里的IP地址是 IP前缀
+        Criterion ipSrc = this.selector().getCriterion(Criterion.Type.IPV4_SRC);
+        Criterion ipDst =this.selector().getCriterion(Criterion.Type.IPV4_DST);
 
+        if(ipProtocol.type().equals(6)){ //TCP = 6
+            Criterion tcpSrcPort = this.selector().getCriterion(Criterion.Type.TCP_SRC);
+            Criterion tcpDstPort = this.selector().getCriterion(Criterion.Type.TCP_DST);
+            Criterion tcpSrcPortMask = this.selector().getCriterion(Criterion.Type.TCP_SRC_MASKED);
+            Criterion tcpDstPortMask = this.selector().getCriterion(Criterion.Type.TCP_DST_MASKED);
+        }else if(ipProtocol.type().equals(17)){ //UDP = 17
+            Criterion udpSrcPort = this.selector().getCriterion(Criterion.Type.UDP_SRC);
+            Criterion udpDstPort = this.selector().getCriterion(Criterion.Type.UDP_DST);
+            Criterion udpSrcPortMask = this.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
+            Criterion udpDstPortMask = this.selector().getCriterion(Criterion.Type.UDP_DST_MASKED);
         }
+
+        // IP五元组实现五元组的 Header Space
 
         return "";
     }
