@@ -49,6 +49,8 @@ import org.onosproject.net.flow.FlowRuleService;
 import org.onosproject.net.flow.FlowRuleStore;
 import org.onosproject.net.flow.FlowRuleStoreDelegate;
 import org.onosproject.net.flow.TableStatisticsEntry;
+import org.onosproject.net.flow.criteria.Criterion;
+import org.onosproject.net.flow.criteria.TcpPortCriterion;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEntry;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEvent;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchOperation;
@@ -377,7 +379,25 @@ public class FlowRuleManager
 
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
-                    FlowRule tmp = flowRuleOp.rule();
+                    FlowRule tmpRule = flowRuleOp.rule();
+                    //获取IP五元组
+                    Criterion ipProtocol = tmpRule.selector().getCriterion(Criterion.Type.IP_PROTO);
+                    //这里的IP地址是 IP前缀
+                    Criterion ipSrc = tmpRule.selector().getCriterion(Criterion.Type.IPV4_SRC);
+                    Criterion ipDst =tmpRule.selector().getCriterion(Criterion.Type.IPV4_DST);
+
+                    if(ipProtocol.type().equals(6)){ //TCP = 6
+                        Criterion tcpSrcPort = tmpRule.selector().getCriterion(Criterion.Type.TCP_SRC);
+                        Criterion tcpDstPort = tmpRule.selector().getCriterion(Criterion.Type.TCP_DST);
+                        Criterion tcpSrcPortMask = tmpRule.selector().getCriterion(Criterion.Type.TCP_SRC_MASKED);
+                        Criterion tcpDstPortMask = tmpRule.selector().getCriterion(Criterion.Type.TCP_DST_MASKED);
+                    }else if(ipProtocol.type().equals(17)){ //UDP = 17
+                        Criterion udpSrcPort = tmpRule.selector().getCriterion(Criterion.Type.UDP_SRC);
+                        Criterion udpDstPort = tmpRule.selector().getCriterion(Criterion.Type.UDP_DST);
+                        Criterion udpSrcPortMask = tmpRule.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
+                        Criterion udpDstPortMask = tmpRule.selector().getCriterion(Criterion.Type.UDP_DST_MASKED);
+                    }
+
                     //checkout here
                     if (algorithmChosen == 1) {
 
