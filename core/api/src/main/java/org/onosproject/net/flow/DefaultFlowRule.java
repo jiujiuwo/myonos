@@ -23,6 +23,8 @@ import org.onosproject.core.ApplicationId;
 import org.onosproject.core.GroupId;
 import org.onosproject.net.DeviceId;
 import org.onosproject.net.flow.criteria.Criterion;
+import org.onosproject.net.flow.criteria.IPCriterion;
+import org.onosproject.net.flow.criteria.IPProtocolCriterion;
 
 import java.util.Objects;
 
@@ -421,16 +423,18 @@ public class DefaultFlowRule implements FlowRule {
 
         //获取IP五元组
         Criterion ipProtocol = this.selector().getCriterion(Criterion.Type.IP_PROTO);
+        IPProtocolCriterion ipProtoCriterion = (IPProtocolCriterion)ipProtocol;
         //这里的IP地址是 IP前缀
         Criterion ipSrc = this.selector().getCriterion(Criterion.Type.IPV4_SRC);
         Criterion ipDst =this.selector().getCriterion(Criterion.Type.IPV4_DST);
 
-        if(ipProtocol.type().equals(6)){ //TCP = 6
+        //这里的type不是UDP或者TCP。
+        if(ipProtoCriterion.protocol()==6){ //TCP = 6
             Criterion tcpSrcPort = this.selector().getCriterion(Criterion.Type.TCP_SRC);
             Criterion tcpDstPort = this.selector().getCriterion(Criterion.Type.TCP_DST);
             Criterion tcpSrcPortMask = this.selector().getCriterion(Criterion.Type.TCP_SRC_MASKED);
             Criterion tcpDstPortMask = this.selector().getCriterion(Criterion.Type.TCP_DST_MASKED);
-        }else if(ipProtocol.type().equals(17)){ //UDP = 17
+        }else if(ipProtoCriterion.protocol()==17){ //UDP = 17
             Criterion udpSrcPort = this.selector().getCriterion(Criterion.Type.UDP_SRC);
             Criterion udpDstPort = this.selector().getCriterion(Criterion.Type.UDP_DST);
             Criterion udpSrcPortMask = this.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
@@ -438,6 +442,14 @@ public class DefaultFlowRule implements FlowRule {
         }
 
         // IP五元组实现五元组的 Header Space
+        StringBuilder headerSpace = new StringBuilder();
+        //IP protocol number: 8 bits
+        String ipProtocolString = Integer.toBinaryString(ipProtoCriterion.protocol());
+        for(int i=0;i<8-ipProtocolString.length();i++){
+            headerSpace.append("0");
+        }
+        headerSpace.append(ipProtocolString);
+
 
         return "";
     }
