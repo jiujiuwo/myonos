@@ -422,11 +422,17 @@ public class DefaultFlowRule implements FlowRule {
     private String selectorTranslate(TrafficSelector selector){
 
         //获取IP五元组
+
+        //获取协议类型，向下转化为具体的类
         Criterion ipProtocol = this.selector().getCriterion(Criterion.Type.IP_PROTO);
         IPProtocolCriterion ipProtoCriterion = (IPProtocolCriterion)ipProtocol;
+
         //这里的IP地址是 IP前缀
         Criterion ipSrc = this.selector().getCriterion(Criterion.Type.IPV4_SRC);
+        IPCriterion ipSrcCriterion = (IPCriterion)ipSrc;
+
         Criterion ipDst =this.selector().getCriterion(Criterion.Type.IPV4_DST);
+        IPCriterion ipDstCriterion = (IPCriterion)ipDst;
 
         //这里的type不是UDP或者TCP。
         if(ipProtoCriterion.protocol()==6){ //TCP = 6
@@ -443,15 +449,44 @@ public class DefaultFlowRule implements FlowRule {
 
         // IP五元组实现五元组的 Header Space
         StringBuilder headerSpace = new StringBuilder();
-        //IP protocol number: 8 bits
+
+
+        //首先先添加 IP protocol number: 8 bits
         String ipProtocolString = Integer.toBinaryString(ipProtoCriterion.protocol());
         for(int i=0;i<8-ipProtocolString.length();i++){
             headerSpace.append("0");
         }
         headerSpace.append(ipProtocolString);
 
+        //添加原目IP 地址到 HeaderSpace
+        headerSpace.append(ipToHeaderSpace(ipSrcCriterion));
+        headerSpace.append(ipToHeaderSpace(ipDstCriterion));
 
         return "";
+    }
+
+    private String ipToHeaderSpace(IPCriterion ipCriterion){
+        StringBuilder result = new StringBuilder();
+
+        //根据IPCriterion 拿到IP的byte数组和prefix
+        byte[] ipSrcBytes = ipCriterion.ip().address().toOctets();
+        int ipSrcPrefix = ipCriterion.ip().prefixLength();
+
+        for(byte b : ipSrcBytes){
+            String tmpString = Integer.toBinaryString(b);
+            for(int i=0;i<8-tmpString.length();i++){
+                result.append("0");
+            }
+            result.append(tmpString);
+        }
+        String xxx = "";
+        for(int i=0;i<4*8-ipSrcPrefix;i++){
+            xxx.concat("x");
+        }
+        //根据ipPrefix将末尾几位置x
+        result.replace(result.length()-(4*8-ipSrcPrefix),result.length(),xxx);
+
+        return result.toString();
     }
 
 
