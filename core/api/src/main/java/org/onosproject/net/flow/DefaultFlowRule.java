@@ -56,7 +56,7 @@ public class DefaultFlowRule implements FlowRule {
     private final FlowRuleExtPayLoad payLoad;
 
     //Header Space属性
-    private String hsString = null;
+    private String hsString;
 
     //在FlowRule接口中添加了该方法
     @Override
@@ -108,7 +108,9 @@ public class DefaultFlowRule implements FlowRule {
         this.created = System.currentTimeMillis();
 
         // todo rewrite the toString method
-        this.hsString = selector.toString();
+        //this.hsString = selector.toString();
+        this.hsString = selectorTranslate(selector);
+
 
         //FIXME: fields below will be removed.
         this.groupId = new GroupId(0);
@@ -179,7 +181,7 @@ public class DefaultFlowRule implements FlowRule {
         this.payLoad = payLoad;
 
         // todo rewrite the toString method
-        this.hsString = selector.toString();
+        this.hsString = selectorTranslate(selector);
 
         /*
          * id consists of the following. | appId (16 bits) | groupId (16 bits) |
@@ -257,7 +259,9 @@ public class DefaultFlowRule implements FlowRule {
         this.payLoad = payLoad;
 
         // todo rewrite the toString method
-        this.hsString = selector.toString();
+        //this.hsString = selector.toString();
+        this.hsString = selectorTranslate(selector);
+
 
         /*
          * id consists of the following. | appId (16 bits) | groupId (16 bits) |
