@@ -22,9 +22,7 @@ import com.google.common.hash.Hashing;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.GroupId;
 import org.onosproject.net.DeviceId;
-import org.onosproject.net.flow.criteria.Criterion;
-import org.onosproject.net.flow.criteria.IPCriterion;
-import org.onosproject.net.flow.criteria.IPProtocolCriterion;
+import org.onosproject.net.flow.criteria.*;
 
 import java.util.Objects;
 
@@ -416,40 +414,18 @@ public class DefaultFlowRule implements FlowRule {
     }
 
     /*
-      Translate the selector to HeaderSpace
+      Translate the selector to HeaderSpace，IP五元组
      */
 
     private String selectorTranslate(TrafficSelector selector){
 
-        //获取IP五元组
-
-        //获取协议类型，向下转化为具体的类
-        Criterion ipProtocol = this.selector().getCriterion(Criterion.Type.IP_PROTO);
-        IPProtocolCriterion ipProtoCriterion = (IPProtocolCriterion)ipProtocol;
-
-        //这里的IP地址是 IP前缀
-        Criterion ipSrc = this.selector().getCriterion(Criterion.Type.IPV4_SRC);
-        IPCriterion ipSrcCriterion = (IPCriterion)ipSrc;
-
-        Criterion ipDst =this.selector().getCriterion(Criterion.Type.IPV4_DST);
-        IPCriterion ipDstCriterion = (IPCriterion)ipDst;
-
-        //这里的type不是UDP或者TCP。
-        if(ipProtoCriterion.protocol()==6){ //TCP = 6
-            Criterion tcpSrcPort = this.selector().getCriterion(Criterion.Type.TCP_SRC);
-            Criterion tcpDstPort = this.selector().getCriterion(Criterion.Type.TCP_DST);
-            Criterion tcpSrcPortMask = this.selector().getCriterion(Criterion.Type.TCP_SRC_MASKED);
-            Criterion tcpDstPortMask = this.selector().getCriterion(Criterion.Type.TCP_DST_MASKED);
-        }else if(ipProtoCriterion.protocol()==17){ //UDP = 17
-            Criterion udpSrcPort = this.selector().getCriterion(Criterion.Type.UDP_SRC);
-            Criterion udpDstPort = this.selector().getCriterion(Criterion.Type.UDP_DST);
-            Criterion udpSrcPortMask = this.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
-            Criterion udpDstPortMask = this.selector().getCriterion(Criterion.Type.UDP_DST_MASKED);
-        }
-
-        // IP五元组实现五元组的 Header Space
+        //实现五元组的 Header Space
         StringBuilder headerSpace = new StringBuilder();
 
+        //获取协议类型，向下转化为具体的类
+        //IP协议字段不能为空，否则下面无法判断TCP还是UDP 端口
+        Criterion ipProtocol = this.selector().getCriterion(Criterion.Type.IP_PROTO);
+        IPProtocolCriterion ipProtoCriterion = (IPProtocolCriterion)ipProtocol;
 
         //首先先添加 IP protocol number: 8 bits
         String ipProtocolString = Integer.toBinaryString(ipProtoCriterion.protocol());
@@ -458,19 +434,91 @@ public class DefaultFlowRule implements FlowRule {
         }
         headerSpace.append(ipProtocolString);
 
+        //这里的IP地址是 IP前缀
+        Criterion ipSrc = this.selector().getCriterion(Criterion.Type.IPV4_SRC);
         //添加原目IP 地址到 HeaderSpace
-        headerSpace.append(ipToHeaderSpace(ipSrcCriterion));
-        headerSpace.append(ipToHeaderSpace(ipDstCriterion));
+        if(ipSrc!=null){
+            IPCriterion ipSrcCriterion = (IPCriterion)ipSrc;
+            headerSpace.append(ipToHeaderSpace(ipSrcCriterion));
+        }else{
+            headerSpace.append("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        }
 
-        return "";
+        Criterion ipDst =this.selector().getCriterion(Criterion.Type.IPV4_DST);
+        if(ipDst!=null){
+            IPCriterion ipDstCriterion = (IPCriterion)ipDst;
+            headerSpace.append(ipToHeaderSpace(ipDstCriterion));
+        }else{
+            headerSpace.append("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        }
+
+        //这里处理原目端口
+        if(ipProtoCriterion.protocol()==6){ //TCP = 6
+            Criterion tcpSrcPort = this.selector().getCriterion(Criterion.Type.TCP_SRC);
+            Criterion tcpDstPort = this.selector().getCriterion(Criterion.Type.TCP_DST);
+            Criterion tcpSrcPortMask = this.selector().getCriterion(Criterion.Type.TCP_SRC_MASKED);
+            Criterion tcpDstPortMask = this.selector().getCriterion(Criterion.Type.TCP_DST_MASKED);
+            if(tcpSrcPort!=null){
+                TcpPortCriterion tcpPortCriterion = (TcpPortCriterion)tcpSrcPort;
+                headerSpace.append(tcpPortToHeaderSpace(tcpPortCriterion));
+            }else if(tcpSrcPort==null&&(tcpSrcPortMask!=null)){
+                TcpPortCriterion tcpPortCriterion = (TcpPortCriterion)tcpSrcPort;
+                headerSpace.append(tcpPortToHeaderSpace(tcpPortCriterion));
+            }else{
+                headerSpace.append("xxxxxxxxxxxxxxxx");
+            }
+
+            if(tcpDstPort!=null){
+                TcpPortCriterion tcpPortCriterion = (TcpPortCriterion)tcpDstPort;
+                headerSpace.append(tcpPortToHeaderSpace(tcpPortCriterion));
+            }else if(tcpDstPort==null&&tcpDstPortMask!=null){
+                TcpPortCriterion tcpPortCriterion = (TcpPortCriterion)tcpDstPort;
+                headerSpace.append(tcpPortToHeaderSpace(tcpPortCriterion));
+            }else{
+                headerSpace.append("xxxxxxxxxxxxxxxx");
+            }
+
+        }else if(ipProtoCriterion.protocol()==17){ //UDP = 17
+            Criterion udpSrcPort = this.selector().getCriterion(Criterion.Type.UDP_SRC);
+            Criterion udpDstPort = this.selector().getCriterion(Criterion.Type.UDP_DST);
+            Criterion udpSrcPortMask = this.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
+            Criterion udpDstPortMask = this.selector().getCriterion(Criterion.Type.UDP_DST_MASKED);
+
+            if(udpSrcPort!=null){
+                UdpPortCriterion udpPortCriterion = (UdpPortCriterion)udpSrcPort;
+                headerSpace.append(udpPortToHeaderSpace(udpPortCriterion));
+            }else if(udpSrcPort==null&&(udpSrcPortMask!=null)){
+                UdpPortCriterion udpPortCriterion = (UdpPortCriterion)udpSrcPort;
+                headerSpace.append(udpPortToHeaderSpace(udpPortCriterion));
+            }else{
+                headerSpace.append("xxxxxxxxxxxxxxxx");
+            }
+
+            if(udpDstPort!=null){
+                UdpPortCriterion udpPortCriterion = (UdpPortCriterion)udpDstPort;
+                headerSpace.append(udpPortToHeaderSpace(udpPortCriterion));
+            }else if(udpDstPort==null&&udpDstPortMask!=null){
+                UdpPortCriterion udpPortCriterion = (UdpPortCriterion)udpDstPort;
+                headerSpace.append(udpPortToHeaderSpace(udpPortCriterion));
+            }else{
+                headerSpace.append("xxxxxxxxxxxxxxxx");
+            }
+        }
+
+        if(headerSpace.length()!=104){
+            return "error";
+        }
+
+        return headerSpace.toString();
     }
 
+    //将 IP Criterion转换为HeaderSpace
     private String ipToHeaderSpace(IPCriterion ipCriterion){
         StringBuilder result = new StringBuilder();
 
         //根据IPCriterion 拿到IP的byte数组和prefix
         byte[] ipSrcBytes = ipCriterion.ip().address().toOctets();
-        int ipSrcPrefix = ipCriterion.ip().prefixLength();
+        int ipSrcPrefixLength = ipCriterion.ip().prefixLength();
 
         for(byte b : ipSrcBytes){
             String tmpString = Integer.toBinaryString(b);
@@ -480,13 +528,90 @@ public class DefaultFlowRule implements FlowRule {
             result.append(tmpString);
         }
         String xxx = "";
-        for(int i=0;i<4*8-ipSrcPrefix;i++){
+        for(int i=0;i<4*8-ipSrcPrefixLength;i++){
             xxx.concat("x");
         }
         //根据ipPrefix将末尾几位置x
-        result.replace(result.length()-(4*8-ipSrcPrefix),result.length(),xxx);
+        result.replace(result.length()-(4*8-ipSrcPrefixLength),result.length(),xxx);
 
         return result.toString();
+    }
+
+    //将TCP Port Criterion 转换为HeaderSpace
+    private String tcpPortToHeaderSpace(TcpPortCriterion tcpPortCriterion){
+        StringBuilder result = new StringBuilder();
+        //tcp port 16 bit
+        if(tcpPortCriterion.type().equals(Criterion.Type.TCP_SRC)||
+                tcpPortCriterion.type().equals(Criterion.Type.TCP_DST)){
+            String tcpPortString = Integer.toBinaryString(tcpPortCriterion.tcpPort().toInt());
+            for(int i=0;i<16-tcpPortString.length();i++){
+                result.append("0");
+            }
+            result.append(tcpPortString);
+            return result.toString();
+        }else if(tcpPortCriterion.type().equals(Criterion.Type.TCP_SRC_MASKED)||
+                tcpPortCriterion.type().equals(Criterion.Type.TCP_DST_MASKED)){
+
+            String tcpPortString = Integer.toBinaryString(tcpPortCriterion.tcpPort().toInt());
+            int tcpPortMask = Integer.bitCount(tcpPortCriterion.mask().toInt());
+
+
+            for(int i=0;i<16-tcpPortString.length();i++){
+                result.append("0");
+            }
+            result.append(tcpPortString);
+
+            StringBuilder xxx = new StringBuilder();
+
+            for(int i=0;i<16-tcpPortMask;i++){
+                xxx.append("x");
+            }
+
+            result.replace(16-tcpPortMask,result.length(),xxx.toString());
+
+            return result.toString();
+        }else{
+            result.append("xxxxxxxxxxxxxxxx");
+            return result.toString();
+        }
+    }
+
+    //将UDP Port Criterion 转换为HeaderSpace
+    private String udpPortToHeaderSpace(UdpPortCriterion udpPortCriterion){
+        StringBuilder result = new StringBuilder();
+        //udp port 16 bit
+        if(udpPortCriterion.type().equals(Criterion.Type.TCP_SRC)||
+                udpPortCriterion.type().equals(Criterion.Type.UDP_DST)){
+            String tcpPortString = Integer.toBinaryString(udpPortCriterion.udpPort().toInt());
+            for(int i=0;i<16-tcpPortString.length();i++){
+                result.append("0");
+            }
+            result.append(tcpPortString);
+            return result.toString();
+        }else if(udpPortCriterion.type().equals(Criterion.Type.UDP_SRC_MASKED)||
+                udpPortCriterion.type().equals(Criterion.Type.UDP_DST_MASKED)){
+
+            String udpPortString = Integer.toBinaryString(udpPortCriterion.udpPort().toInt());
+            int udpPortMask = Integer.bitCount(udpPortCriterion.mask().toInt());
+
+            for(int i=0;i<16-udpPortString.length();i++){
+                result.append("0");
+            }
+            result.append(udpPortString);
+
+            StringBuilder xxx = new StringBuilder();
+
+            for(int i=0;i<16-udpPortMask;i++){
+                xxx.append("x");
+            }
+
+            result.replace(16-udpPortMask,result.length(),xxx.toString());
+
+            return result.toString();
+        }else{
+            result.append("xxxxxxxxxxxxxxxx");
+            return result.toString();
+        }
     }
 
 
