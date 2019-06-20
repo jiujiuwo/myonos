@@ -551,6 +551,11 @@ public class IntentTestsMocks {
         }
 
         @Override
+        public byte[] getHsBytes() {
+            return new byte[0];
+        }
+
+        @Override
         public int tableId() {
             return tableId.id();
         }
