@@ -149,6 +149,11 @@ public class FlowEntryAdapter implements FlowEntry {
     }
 
     @Override
+    public byte[] getHsBytes() {
+        return new byte[0];
+    }
+
+    @Override
     public FlowRuleExtPayLoad payLoad() {
         return null;
     }

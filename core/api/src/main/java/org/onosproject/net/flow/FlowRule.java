@@ -200,6 +200,8 @@ public interface FlowRule extends PiTranslatable {
      */
     String getHsString();
 
+    byte[] getHsBytes();
+
     /**
      * A flowrule builder.
      */

@@ -57,12 +57,19 @@ public class DefaultFlowRule implements FlowRule {
 
     //Header Space属性
     private String hsString;
+    private byte[] hsBytes;
 
     //在FlowRule接口中添加了该方法
     @Override
     public String getHsString() {
         return this.hsString;
     }
+
+    @Override
+    public byte[] getHsBytes() {
+        return hsBytes;
+    }
+
 
     /**
      * Creates a new flow rule from an existing rule.
@@ -87,6 +94,7 @@ public class DefaultFlowRule implements FlowRule {
 
         //构造方法中复制hsString属性
         this.hsString = rule.getHsString();
+        this.hsBytes = rule.getHsBytes();
     }
 
     private DefaultFlowRule(DeviceId deviceId, TrafficSelector selector,
@@ -110,12 +118,14 @@ public class DefaultFlowRule implements FlowRule {
         // todo rewrite the toString method
         //this.hsString = selector.toString();
         this.hsString = selectorTranslate(selector);
+        this.hsBytes = hsStringToBytes(this.hsString);
 
 
         //FIXME: fields below will be removed.
         this.groupId = new GroupId(0);
         this.payLoad = null;
     }
+
 
     /**
      * Support for the third party flow rule. Creates a flow rule of flow table.
@@ -182,6 +192,8 @@ public class DefaultFlowRule implements FlowRule {
 
         // todo rewrite the toString method
         this.hsString = selectorTranslate(selector);
+        this.hsBytes = hsStringToBytes(this.hsString);
+
 
         /*
          * id consists of the following. | appId (16 bits) | groupId (16 bits) |
@@ -261,6 +273,7 @@ public class DefaultFlowRule implements FlowRule {
         // todo rewrite the toString method
         //this.hsString = selector.toString();
         this.hsString = selectorTranslate(selector);
+        this.hsBytes = hsStringToBytes(this.hsString);
 
 
         /*
@@ -617,6 +630,27 @@ public class DefaultFlowRule implements FlowRule {
             result.append("xxxxxxxxxxxxxxxx");
             return result.toString();
         }
+    }
+
+    private byte[] hsStringToBytes(String hsString) {
+
+        if(hsString.length()!=136){
+            return null;
+        }
+
+        byte[] result = new byte[136];
+        for(int i=0;i<hsString.length();i++){
+            if(hsString.charAt(i)=='0'){
+                result[i] = Byte.parseByte("01");
+            }else if(hsString.charAt(i)=='1'){
+                result[i] = Byte.parseByte("10");
+            }else if(hsString.charAt(i)=='x'){
+
+            }else{
+                result[i] = Byte.parseByte("00");
+            }
+        }
+        return result;
     }
 
 

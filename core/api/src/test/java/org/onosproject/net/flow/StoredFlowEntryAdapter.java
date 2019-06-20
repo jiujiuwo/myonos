@@ -56,4 +56,9 @@ public class StoredFlowEntryAdapter extends FlowEntryAdapter implements StoredFl
     public void setBytes(long bytes) {
 
     }
+
+    @Override
+    public byte[] getHsBytes() {
+        return new byte[0];
+    }
 }
