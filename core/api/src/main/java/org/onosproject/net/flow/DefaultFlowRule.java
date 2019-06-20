@@ -511,7 +511,7 @@ public class DefaultFlowRule implements FlowRule {
 
 
         if (headerSpace.length() != 136) {
-            return null;
+            return headerSpace.length()+"";
         }
 
         return headerSpace.toString();
@@ -532,12 +532,12 @@ public class DefaultFlowRule implements FlowRule {
             }
             result.append(tmpString);
         }
-        String xxx = "";
+        StringBuilder xxx = new StringBuilder();
         for (int i = 0; i < 4 * 8 - ipSrcPrefixLength; i++) {
-            xxx.concat("x");
+            xxx.append("x");
         }
         //根据ipPrefix将末尾几位置x
-        result.replace(result.length() - (4 * 8 - ipSrcPrefixLength), result.length(), xxx);
+        result.replace(result.length() - (4 * 8 - ipSrcPrefixLength), result.length(), xxx.toString());
 
         return result.toString();
     }
