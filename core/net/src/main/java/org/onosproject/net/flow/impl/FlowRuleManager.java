@@ -33,22 +33,7 @@ import org.onosproject.net.device.DeviceEvent;
 import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.driver.DriverService;
-import org.onosproject.net.flow.CompletedBatchOperation;
-import org.onosproject.net.flow.DefaultFlowEntry;
-import org.onosproject.net.flow.FlowEntry;
-import org.onosproject.net.flow.FlowRule;
-import org.onosproject.net.flow.FlowRuleEvent;
-import org.onosproject.net.flow.FlowRuleListener;
-import org.onosproject.net.flow.FlowRuleOperation;
-import org.onosproject.net.flow.FlowRuleOperations;
-import org.onosproject.net.flow.FlowRuleProgrammable;
-import org.onosproject.net.flow.FlowRuleProvider;
-import org.onosproject.net.flow.FlowRuleProviderRegistry;
-import org.onosproject.net.flow.FlowRuleProviderService;
-import org.onosproject.net.flow.FlowRuleService;
-import org.onosproject.net.flow.FlowRuleStore;
-import org.onosproject.net.flow.FlowRuleStoreDelegate;
-import org.onosproject.net.flow.TableStatisticsEntry;
+import org.onosproject.net.flow.*;
 import org.onosproject.net.flow.criteria.Criterion;
 import org.onosproject.net.flow.criteria.IPProtocolCriterion;
 import org.onosproject.net.flow.criteria.TcpPortCriterion;
@@ -381,13 +366,25 @@ public class FlowRuleManager
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     FlowRule tmpRule = flowRuleOp.rule();
-                    //checkout here
-                    if (algorithmChosen == 1) {
+                    DeviceId deviceId = tmpRule.deviceId();
+                    Iterable<FlowEntry> flowEntris = getFlowEntries(deviceId);
 
 
-                    } else if (algorithmChosen == 2) {
-                        byte[] RyBytes = tmpRule.getHsBytes();
+                    byte[] RyBytes = tmpRule.getHsBytes();
+                    for (FlowEntry flowEntry : flowEntris) {
+                        if(flowEntry.table().equals(tmpRule.table())){
+                            if(algorithmChosen==1){
+                                byte[] hsBytes = flowEntry.getHsBytes();
+                                isConflict = ConflictCheck.headerSpaceConflictCheck(hsBytes, RyBytes);
+                            }else if(algorithmChosen==2){
+                                isConflict = ConflictCheck.filedRangeConflictCheck(flowEntry,tmpRule);
+                            }
+                        }
                     }
+                }
+
+                if (isConflict) {
+                    break;
                 }
             }
 

@@ -6,6 +6,7 @@ import org.onosproject.net.flow.criteria.IPProtocolCriterion;
 
 public class ConflictCheck {
 
+    //后续使用 heapByteBuffer 试试
     public static boolean headerSpaceConflictCheck(byte[] hs1,byte[] hs2){
         if(hs1.length!=hs2.length){
             System.out.println("error");
