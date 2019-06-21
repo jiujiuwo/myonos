@@ -1,6 +1,7 @@
 package org.onosproject.net.flow.impl;
 
 import org.onosproject.net.flow.FlowRule;
+import org.onosproject.net.flow.TrafficTreatment;
 import org.onosproject.net.flow.criteria.Criterion;
 
 import java.util.ArrayList;
@@ -129,6 +130,13 @@ public class ConflictCheck {
             result.add("*");
         }
         return result;
+    }
+
+    public static boolean instructionConflictCheck(FlowRule rxFlowRule,FlowRule ryFlowRule){
+
+        TrafficTreatment  trafficTreatment = rxFlowRule.treatment();
+
+        return false;
     }
 
 }

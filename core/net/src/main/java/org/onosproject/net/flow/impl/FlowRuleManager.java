@@ -383,7 +383,7 @@ public class FlowRuleManager
                         }
                         //如果交集非空,查看指令和动作的冲突情况
                         if(uionEmpty!=0){
-
+                            isConflict = flowEntry.treatment().equals(tmpRule.treatment());
                         }
                     }
                 }
