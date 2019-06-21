@@ -370,22 +370,24 @@ public class FlowRuleManager
                     Iterable<FlowEntry> flowEntris = getFlowEntries(deviceId);
 
 
-                    byte[] RyBytes = tmpRule.getHsBytes();
+                    byte[] ryBytes = tmpRule.getHsBytes();
                     for (FlowEntry flowEntry : flowEntris) {
+                        int uionEmpty = 0;
                         if(flowEntry.table().equals(tmpRule.table())){
                             if(algorithmChosen==1){
                                 byte[] hsBytes = flowEntry.getHsBytes();
-                                isConflict = ConflictCheck.headerSpaceConflictCheck(hsBytes, RyBytes);
+                                uionEmpty = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
                             }else if(algorithmChosen==2){
-                                isConflict = ConflictCheck.filedRangeConflictCheck(flowEntry,tmpRule);
+                                uionEmpty = ConflictCheck.filedRangeConflictCheck(flowEntry,tmpRule);
                             }
+                        }
+                        //如果交集非空,查看指令和动作的冲突情况
+                        if(uionEmpty!=0){
+
                         }
                     }
                 }
 
-                if (isConflict) {
-                    break;
-                }
             }
 
             //检测到冲突后，返回错误信息，不安装该流表项集合
