@@ -372,6 +372,7 @@ public class FlowRuleManager
 
                     byte[] ryBytes = tmpRule.getHsBytes();
                     for (FlowEntry flowEntry : flowEntris) {
+                        //uionEmpty,0表示交集为空，1表示部分相交，2表示Rx包含Ry,3表示Ry包含Rx
                         int uionEmpty = 0;
                         if(flowEntry.table().equals(tmpRule.table())){
                             if(algorithmChosen==1){
@@ -382,8 +383,17 @@ public class FlowRuleManager
                             }
                         }
                         //如果交集非空,查看指令和动作的冲突情况
-                        if(uionEmpty!=0){
-                            isConflict = flowEntry.treatment().equals(tmpRule.treatment());
+                        boolean treatmentEquals = flowEntry.treatment().equals(tmpRule.treatment());
+                        if(uionEmpty==0){//不相交
+                            isConflict = false;
+                        }else if(uionEmpty==1) {//部分相交
+                            if (treatmentEquals) {
+
+                            } else {
+
+                            }
+                        }else{//包含关系
+
                         }
                     }
                 }

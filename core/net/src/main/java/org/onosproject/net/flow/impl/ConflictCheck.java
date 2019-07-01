@@ -11,18 +11,18 @@ public class ConflictCheck {
 
     /*
         如果交集为空，则返回0
-        如果交集非空，部分相交返回1，包含关系返回2
+        如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
      */
     public static int headerSpaceConflictCheck(byte[] rxBytes, byte[] ryBytes) {
         if (rxBytes.length != ryBytes.length) {
-            System.out.println("error");
+           // System.out.println("error");
             return 0;
         }
         boolean sameWithRx = true;
         boolean sameWithRy = true;
         for (int i = 0; i < rxBytes.length; i++) {
             byte tmp = (byte) (rxBytes[i] & ryBytes[i]);
-            if (tmp == 00) {
+            if (tmp == 0) {
                 return 0;
             }
             if (tmp != rxBytes[i]) {
@@ -33,9 +33,11 @@ public class ConflictCheck {
             }
         }
 
-        if (sameWithRx || sameWithRy) {
+        if(sameWithRx){
             return 2;
-        } else {
+        }else if(sameWithRy){
+            return 3;
+        }else{
             return 1;
         }
     }
