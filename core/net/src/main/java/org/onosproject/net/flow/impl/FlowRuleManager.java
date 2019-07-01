@@ -53,13 +53,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.slf4j.Logger;
 
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -269,6 +263,21 @@ public class FlowRuleManager
         return store.getFlowEntries(deviceId);
     }
 
+    public List<FlowRule> getFlowRulesByDeviceAndTable(DeviceId deviceId, TableId tableId) {
+        checkPermission(FLOWRULE_READ);
+        checkNotNull(deviceId, DEVICE_ID_NULL);
+        Iterable<FlowEntry> flowEntries = store.getFlowEntries(deviceId);
+        List<FlowRule> flowRulesList = new ArrayList<>();
+
+        for (FlowEntry flowEntry : flowEntries) {
+            if (flowEntry.table().equals(tableId)) {
+                flowRulesList.add(flowEntry);
+            }
+        }
+
+        return flowRulesList;
+    }
+
     // 安装流规则的第一个方法，其实调用第二个（apply）方法
     @Override
     public void applyFlowRules(FlowRule... flowRules) {
@@ -367,37 +376,8 @@ public class FlowRuleManager
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
-                    Iterable<FlowEntry> flowEntris = getFlowEntries(deviceId);
-
-
-                    byte[] ryBytes = tmpRule.getHsBytes();
-                    for (FlowEntry flowEntry : flowEntris) {
-                        //uionEmpty,0表示交集为空，1表示部分相交，2表示Rx包含Ry,3表示Ry包含Rx
-                        int uionEmpty = 0;
-                        if(flowEntry.table().equals(tmpRule.table())){
-                            if(algorithmChosen==1){
-                                byte[] hsBytes = flowEntry.getHsBytes();
-                                uionEmpty = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
-                            }else if(algorithmChosen==2){
-                                uionEmpty = ConflictCheck.filedRangeConflictCheck(flowEntry,tmpRule);
-                            }
-                        }
-                        //如果交集非空,查看指令和动作的冲突情况
-                        boolean treatmentEquals = flowEntry.treatment().equals(tmpRule.treatment());
-                        if(uionEmpty==0){//不相交
-                            isConflict = false;
-                        }else if(uionEmpty==1) {//部分相交
-                            if (treatmentEquals) {
-
-                            } else {
-
-                            }
-                        }else{//包含关系
-
-                        }
-                    }
+                    isConflict = conflictCheck(deviceId,tmpRule);
                 }
-
             }
 
             //检测到冲突后，返回错误信息，不安装该流表项集合
@@ -409,6 +389,40 @@ public class FlowRuleManager
 
         }
 
+    }
+
+    private boolean conflictCheck(DeviceId deviceId,FlowRule tmpRule){
+        boolean isConflict = false;
+        List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
+
+        byte[] ryBytes = tmpRule.getHsBytes();
+        for (FlowRule flowRule : flowRules) {
+            //uionResult,0表示交集为空，1表示部分相交，2表示Rx包含Ry,3表示Ry包含Rx
+            int unionResult = 0;
+
+            if (algorithmChosen == 1) {
+                byte[] hsBytes = flowRule.getHsBytes();
+                unionResult = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
+            } else if (algorithmChosen == 2) {
+                unionResult = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
+            }
+
+            //如果交集非空,查看指令和动作的冲突情况
+            boolean instructionConflict = false;
+            boolean treatmentEquals = flowRule.treatment().equals(tmpRule.treatment());
+            if (unionResult == 0) {//不相交
+                isConflict = false;
+                return false;
+            } else if (unionResult == 1) {//部分相交
+
+            } else if (unionResult == 2) {//包含关系
+
+            } else {
+
+            }
+        }
+
+        return false;
     }
 
     @Override
