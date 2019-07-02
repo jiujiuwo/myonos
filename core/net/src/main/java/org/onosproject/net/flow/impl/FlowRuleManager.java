@@ -376,7 +376,7 @@ public class FlowRuleManager
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
-                    isConflict = conflictCheck(deviceId,tmpRule);
+                    isConflict = conflictCheck(deviceId, tmpRule);
                 }
             }
 
@@ -391,7 +391,7 @@ public class FlowRuleManager
 
     }
 
-    private boolean conflictCheck(DeviceId deviceId,FlowRule tmpRule){
+    private boolean conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
         boolean isConflict = false;
         List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
 
@@ -408,12 +408,10 @@ public class FlowRuleManager
             }
 
             //如果交集非空,查看指令和动作的冲突情况
-            boolean instructionConflict = false;
-            boolean treatmentEquals = flowRule.treatment().equals(tmpRule.treatment());
             if (unionResult == 0) {//不相交
-                isConflict = false;
-                return false;
+                return isConflict;
             } else if (unionResult == 1) {//部分相交
+
 
             } else if (unionResult == 2) {//包含关系
 
@@ -422,7 +420,7 @@ public class FlowRuleManager
             }
         }
 
-        return false;
+        return isConflict;
     }
 
     @Override

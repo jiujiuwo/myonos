@@ -136,7 +136,9 @@ public class ConflictCheck {
 
     public static boolean instructionConflictCheck(FlowRule rxFlowRule,FlowRule ryFlowRule){
 
-        TrafficTreatment  trafficTreatment = rxFlowRule.treatment();
+        TrafficTreatment rxIns = rxFlowRule.treatment();
+        TrafficTreatment ryIns = ryFlowRule.treatment();
+
 
         return false;
     }
