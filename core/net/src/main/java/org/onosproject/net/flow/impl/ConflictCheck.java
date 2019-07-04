@@ -3,6 +3,8 @@ package org.onosproject.net.flow.impl;
 import org.onosproject.net.flow.FlowRule;
 import org.onosproject.net.flow.TrafficTreatment;
 import org.onosproject.net.flow.criteria.Criterion;
+import org.onosproject.net.flow.instructions.Instruction;
+import org.onosproject.net.flow.instructions.Instructions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,12 +136,45 @@ public class ConflictCheck {
         return result;
     }
 
+    //处理 output,group,goto-table，meter指令
     public static boolean instructionConflictCheck(FlowRule rxFlowRule,FlowRule ryFlowRule){
 
         TrafficTreatment rxIns = rxFlowRule.treatment();
         TrafficTreatment ryIns = ryFlowRule.treatment();
 
+        Instructions.OutputInstruction rxOutput = null;
+        Instructions.OutputInstruction ryOutput = null;
+        Instructions.GroupInstruction rxGroup = null;
+        Instructions.GroupInstruction ryGroup = null;
+        Instructions.NoActionInstruction rxNoAction = null;
+        Instructions.NoActionInstruction ryNoAction = null;
+        Instructions.TableTypeTransition rxTable = null;
+        Instructions.TableTypeTransition ryTable = null;
 
+        for(Instruction instruction:rxIns.allInstructions()){
+            if(instruction instanceof Instructions.OutputInstruction){
+                rxOutput = (Instructions.OutputInstruction)instruction;
+            }else if(instruction instanceof Instructions.GroupInstruction){
+                rxGroup = (Instructions.GroupInstruction)instruction;
+            }else if(instruction instanceof  Instructions.NoActionInstruction){
+                rxNoAction = (Instructions.NoActionInstruction)instruction;
+            }else if(instruction instanceof Instructions.TableTypeTransition){
+                rxTable = (Instructions.TableTypeTransition)instruction;
+            }
+        }
+
+
+        for(Instruction instruction:ryIns.allInstructions()){
+            if(instruction instanceof Instructions.OutputInstruction){
+                ryOutput = (Instructions.OutputInstruction)instruction;
+            }else if(instruction instanceof Instructions.GroupInstruction){
+                ryGroup = (Instructions.GroupInstruction)instruction;
+            }else if(instruction instanceof  Instructions.NoActionInstruction){
+                ryNoAction = (Instructions.NoActionInstruction)instruction;
+            }else if(instruction instanceof Instructions.TableTypeTransition){
+                ryTable = (Instructions.TableTypeTransition)instruction;
+            }
+        }
         return false;
     }
 
