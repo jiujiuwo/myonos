@@ -175,6 +175,29 @@ public class ConflictCheck {
                 ryTable = (Instructions.TableTypeTransition)instruction;
             }
         }
+
+        if(rxOutput!=null&&ryOutput!=null){
+            if(rxOutput.port().equals(rxOutput.port())){
+                return false;
+            }else{
+                return true;
+            }
+        }else if(rxGroup!=null&&ryGroup!=null){
+            if(rxGroup.groupId().equals(ryGroup.groupId())){
+                return false;
+            }else{
+                return true;
+            }
+        }else if(rxNoAction!=null&&ryNoAction!=null){
+            return false;
+        }else if(rxTable!=null&&ryTable!=null){
+            if(rxTable.tableId().equals(ryTable.tableId())){
+                return false;
+            }
+        }else{
+
+        }
+
         return false;
     }
 
