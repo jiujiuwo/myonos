@@ -17,7 +17,7 @@ public class ConflictCheck {
      */
     public static int headerSpaceConflictCheck(byte[] rxBytes, byte[] ryBytes) {
         if (rxBytes.length != ryBytes.length) {
-           // System.out.println("error");
+            // System.out.println("error");
             return 0;
         }
         boolean sameWithRx = true;
@@ -35,11 +35,11 @@ public class ConflictCheck {
             }
         }
 
-        if(sameWithRx){
+        if (sameWithRx) {
             return 2;
-        }else if(sameWithRy){
+        } else if (sameWithRy) {
             return 3;
-        }else{
+        } else {
             return 1;
         }
     }
@@ -50,7 +50,7 @@ public class ConflictCheck {
         List<String> rxList = getFiveTupleOfFlowRule(rxFlowRule);
         List<String> ryList = getFiveTupleOfFlowRule(ryFLowRule);
 
-        for(int i=0;i<rxList.size();i++){
+        for (int i = 0; i < rxList.size(); i++) {
 
         }
 
@@ -102,42 +102,59 @@ public class ConflictCheck {
         Criterion udpSrcPortMask = flowRule.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
         Criterion udpDstPortMask = flowRule.selector().getCriterion(Criterion.Type.UDP_DST_MASKED);
 
-        if(tcpSrcPort!=null){
+        if (tcpSrcPort != null) {
             result.add(tcpSrcPort.toString());
-        }else if(tcpSrcPort==null&&tcpSrcPortMask!=null){
+        } else if (tcpSrcPort == null && tcpSrcPortMask != null) {
             result.add(tcpDstPortMask.toString());
-        }else{
+        } else {
             result.add("*");
         }
 
-        if(tcpDstPort!=null){
+        if (tcpDstPort != null) {
             result.add(tcpDstPort.toString());
-        }else if(tcpDstPort==null&&tcpDstPortMask!=null){
+        } else if (tcpDstPort == null && tcpDstPortMask != null) {
             result.add(tcpDstPortMask.toString());
-        }else{
+        } else {
             result.add("*");
         }
 
-        if(udpSrcPort!=null){
+        if (udpSrcPort != null) {
             result.add(udpSrcPort.toString());
-        }else if(udpSrcPort==null&&udpSrcPortMask!=null){
+        } else if (udpSrcPort == null && udpSrcPortMask != null) {
             result.add(udpDstPortMask.toString());
-        }else{
+        } else {
             result.add("*");
         }
 
-        if(udpDstPort!=null){
+        if (udpDstPort != null) {
             result.add(udpDstPort.toString());
-        }else if(udpDstPort==null&&udpDstPortMask!=null){
+        } else if (udpDstPort == null && udpDstPortMask != null) {
             result.add(udpDstPortMask.toString());
-        }else{
+        } else {
             result.add("*");
         }
         return result;
     }
 
+    private static void getCheckInstructions(TrafficTreatment treatment, Instructions.OutputInstruction outputInstruction,
+                                             Instructions.GroupInstruction groupInstruction, Instructions.NoActionInstruction
+                                                     noActionInstruction, Instructions.TableTypeTransition tableTypeTransition) {
+
+        for (Instruction instruction : treatment.allInstructions()) {
+            if (instruction instanceof Instructions.OutputInstruction) {
+                outputInstruction = (Instructions.OutputInstruction) instruction;
+            } else if (instruction instanceof Instructions.GroupInstruction) {
+                groupInstruction = (Instructions.GroupInstruction) instruction;
+            } else if (instruction instanceof Instructions.NoActionInstruction) {
+                noActionInstruction = (Instructions.NoActionInstruction) instruction;
+            } else if (instruction instanceof Instructions.TableTypeTransition) {
+                tableTypeTransition = (Instructions.TableTypeTransition) instruction;
+            }
+        }
+    }
+
     //处理 output,group,goto-table，meter指令
-    public static boolean instructionConflictCheck(FlowRule rxFlowRule,FlowRule ryFlowRule){
+    public static boolean instructionConflictCheck(FlowRule rxFlowRule, FlowRule ryFlowRule) {
 
         TrafficTreatment rxIns = rxFlowRule.treatment();
         TrafficTreatment ryIns = ryFlowRule.treatment();
@@ -151,54 +168,33 @@ public class ConflictCheck {
         Instructions.TableTypeTransition rxTable = null;
         Instructions.TableTypeTransition ryTable = null;
 
-        for(Instruction instruction:rxIns.allInstructions()){
-            if(instruction instanceof Instructions.OutputInstruction){
-                rxOutput = (Instructions.OutputInstruction)instruction;
-            }else if(instruction instanceof Instructions.GroupInstruction){
-                rxGroup = (Instructions.GroupInstruction)instruction;
-            }else if(instruction instanceof  Instructions.NoActionInstruction){
-                rxNoAction = (Instructions.NoActionInstruction)instruction;
-            }else if(instruction instanceof Instructions.TableTypeTransition){
-                rxTable = (Instructions.TableTypeTransition)instruction;
-            }
-        }
+        getCheckInstructions(rxIns, rxOutput, rxGroup, rxNoAction, rxTable);
+        getCheckInstructions(ryIns, ryOutput, ryGroup, ryNoAction, ryTable);
 
-
-        for(Instruction instruction:ryIns.allInstructions()){
-            if(instruction instanceof Instructions.OutputInstruction){
-                ryOutput = (Instructions.OutputInstruction)instruction;
-            }else if(instruction instanceof Instructions.GroupInstruction){
-                ryGroup = (Instructions.GroupInstruction)instruction;
-            }else if(instruction instanceof  Instructions.NoActionInstruction){
-                ryNoAction = (Instructions.NoActionInstruction)instruction;
-            }else if(instruction instanceof Instructions.TableTypeTransition){
-                ryTable = (Instructions.TableTypeTransition)instruction;
-            }
-        }
-
-        if(rxOutput!=null&&ryOutput!=null){
-            if(rxOutput.port().equals(rxOutput.port())){
+        if (rxOutput != null && ryOutput != null) {
+            if (rxOutput.port().equals(rxOutput.port())) {
                 return false;
-            }else{
+            } else {
                 return true;
             }
-        }else if(rxGroup!=null&&ryGroup!=null){
-            if(rxGroup.groupId().equals(ryGroup.groupId())){
+        } else if (rxGroup != null && ryGroup != null) {
+            if (rxGroup.groupId().equals(ryGroup.groupId())) {
                 return false;
-            }else{
+            } else {
                 return true;
             }
-        }else if(rxNoAction!=null&&ryNoAction!=null){
+        } else if (rxNoAction != null && ryNoAction != null) {
             return false;
-        }else if(rxTable!=null&&ryTable!=null){
-            if(rxTable.tableId().equals(ryTable.tableId())){
+        } else if (rxTable != null && ryTable != null) {
+            if (rxTable.tableId().equals(ryTable.tableId())) {
                 return false;
+            } else {
+                return true;
             }
-        }else{
-
+        } else {
+            return false;
         }
 
-        return false;
     }
 
 }
