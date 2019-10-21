@@ -377,14 +377,17 @@ public class FlowRuleManager
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
                     isConflict = conflictCheck(deviceId, tmpRule);
+                    if (isConflict) {
+                        break;
+                    }
+                    //检测到冲突后，返回错误信息，不安装该流表项集合
                 }
-            }
-
-            //检测到冲突后，返回错误信息，不安装该流表项集合
-            if (isConflict) {
-                ops.callback().onError(ops);
-            } else {
-                operationsService.execute(new FlowOperationsProcessor(ops));
+                if (isConflict) {
+                    ops.callback().onError(ops);
+                    break;
+                } else {
+                    operationsService.execute(new FlowOperationsProcessor(ops));
+                }
             }
 
         }
@@ -406,17 +409,29 @@ public class FlowRuleManager
             } else if (algorithmChosen == 2) {
                 unionResult = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
             }
+            boolean insResult = ConflictCheck.instructionConflictCheck(flowRule, tmpRule);
 
             //如果交集非空,查看指令和动作的冲突情况
             if (unionResult == 0) {//不相交
                 return isConflict;
             } else if (unionResult == 1) {//部分相交
-
-
+                if (insResult && flowRule.priority() == tmpRule.priority()) {
+                    return true;
+                } else {
+                    return false;
+                }
             } else if (unionResult == 2) {//包含关系
-
+                if (insResult && flowRule.priority() == tmpRule.priority()) {
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
-
+                if (insResult && flowRule.priority() == tmpRule.priority()) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
 
