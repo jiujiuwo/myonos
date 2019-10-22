@@ -11,6 +11,22 @@ import java.util.List;
 
 public class ConflictCheck {
 
+    public enum relations {
+        UNKNOWN,
+        EXACT,
+        SUBSET,
+        CORRELATED,
+        SUPERSET
+    }
+
+    public enum anomals {
+        DISJOINT,
+        CORRELATION,
+        REDUNDANCY,
+        GENERALIZATION,
+        SHADOWING
+    }
+
     /*
         如果交集为空，则返回0
         如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
@@ -44,17 +60,62 @@ public class ConflictCheck {
         }
     }
 
-    // 基于字段范围的检测方法
-    public static int filedRangeConflictCheck(FlowRule rxFlowRule, FlowRule ryFLowRule) {
+
+    /*  基于字段范围的检测方法
+        如果交集为空，则返回0
+        如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
+     */
+    public static anomals filedRangeConflictCheck(FlowRule rxFlowRule, FlowRule ryFLowRule) {
+
+        relations relation = relations.UNKNOWN;//0 unknown,1 exact, 2 subset,3 superset, 4 intersectant
 
         List<String> rxList = getFiveTupleOfFlowRule(rxFlowRule);
         List<String> ryList = getFiveTupleOfFlowRule(ryFLowRule);
 
         for (int i = 0; i < rxList.size(); i++) {
-
+            if (rxList.get(i).equals(ryList.get(i))) {
+                if (relation == relations.UNKNOWN) {
+                    relation = relations.EXACT;
+                }
+            } else if (isSubset(rxList.get(i), ryList.get(i))) {
+                if (relation == relations.SUBSET || relation == relations.CORRELATED) {
+                    relation = relation.CORRELATED;
+                } else {
+                    relation = relations.SUPERSET;
+                }
+            } else if (isSubset(ryList.get(i), rxList.get(i))) {
+                if (relation == relations.SUPERSET || relation == relations.CORRELATED) {
+                    relation = relations.CORRELATED;
+                } else {
+                    relation = relations.SUBSET;
+                }
+            } else {
+                return anomals.DISJOINT;
+            }
         }
 
-        return 0;
+        boolean insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
+        if (relation == relations.CORRELATED && insCon) {
+            return anomals.CORRELATION;
+        } else if (relation == relations.SUPERSET) {
+            if (!insCon) {
+                return anomals.REDUNDANCY;
+            } else {
+                return anomals.GENERALIZATION;
+            }
+        } else if (relation == relations.SUBSET || relation == relations.EXACT) {
+            if (!insCon) {
+                return anomals.REDUNDANCY;
+            } else {
+                return anomals.SHADOWING;
+            }
+        }
+        return anomals.DISJOINT;
+    }
+
+    private static boolean isSubset(String x, String y) {
+        System.out.println(x + " " + y);
+        return false;
     }
 
     /*
