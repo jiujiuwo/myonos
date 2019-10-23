@@ -1,4 +1,4 @@
-package org.onosproject.net.flow.impl;
+package org.onosproject.net.flow.conflict;
 
 import org.onosproject.net.flow.FlowRule;
 import org.onosproject.net.flow.TrafficTreatment;

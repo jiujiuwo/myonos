@@ -22,8 +22,8 @@ import com.google.common.hash.Hashing;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.GroupId;
 import org.onosproject.net.DeviceId;
+import org.onosproject.net.flow.conflict.HeaderSpaceUtil;
 import org.onosproject.net.flow.criteria.*;
-import org.onosproject.net.flow.impl.HeaderSpaceUtil;
 
 import java.util.Objects;
 

@@ -34,9 +34,7 @@ import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.driver.DriverService;
 import org.onosproject.net.flow.*;
-import org.onosproject.net.flow.criteria.Criterion;
-import org.onosproject.net.flow.criteria.IPProtocolCriterion;
-import org.onosproject.net.flow.criteria.TcpPortCriterion;
+import org.onosproject.net.flow.conflict.ConflictCheck;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEntry;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEvent;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchOperation;
@@ -150,7 +148,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
-    private int algorithmChosen = 0;
+    private int algorithmChosen = 2;
 
     @Activate
     public void activate(ComponentContext context) {
@@ -370,32 +368,22 @@ public class FlowRuleManager
             operationsService.execute(new FlowOperationsProcessor(ops));
         } else {
             List<Set<FlowRuleOperation>> stages = ops.stages();
-            boolean isConflict = false;
 
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
-                    isConflict = conflictCheck(deviceId, tmpRule);
-                    if (isConflict) {
-                        break;
-                    }
-                    //检测到冲突后，返回错误信息，不安装该流表项集合
-                }
-                if (isConflict) {
-                    ops.callback().onError(ops);
-                    break;
-                } else {
-                    operationsService.execute(new FlowOperationsProcessor(ops));
+                    ConflictCheck.anomals result = conflictCheck(deviceId, tmpRule);
+                    log.info("checkout result *************** "+result + "");
                 }
             }
-
+            operationsService.execute(new FlowOperationsProcessor(ops));
         }
 
     }
 
-    private boolean conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
-        boolean isConflict = false;
+    private ConflictCheck.anomals conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
+        ConflictCheck.anomals result = ConflictCheck.anomals.DISJOINT;
         List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
 
         byte[] ryBytes = tmpRule.getHsBytes();
@@ -405,13 +393,13 @@ public class FlowRuleManager
 
             if (algorithmChosen == 1) {
                 byte[] hsBytes = flowRule.getHsBytes();
-                unionResult = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
+                // unionResult = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
             } else if (algorithmChosen == 2) {
-                ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
             }
         }
 
-        return isConflict;
+        return result;
     }
 
     @Override
