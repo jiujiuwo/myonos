@@ -2,7 +2,7 @@ package org.onosproject.net.flow.impl;
 
 import org.onosproject.net.flow.FlowRule;
 import org.onosproject.net.flow.TrafficTreatment;
-import org.onosproject.net.flow.criteria.Criterion;
+import org.onosproject.net.flow.criteria.*;
 import org.onosproject.net.flow.instructions.Instruction;
 import org.onosproject.net.flow.instructions.Instructions;
 
@@ -27,39 +27,6 @@ public class ConflictCheck {
         SHADOWING
     }
 
-    /*
-        如果交集为空，则返回0
-        如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
-     */
-    public static int headerSpaceConflictCheck(byte[] rxBytes, byte[] ryBytes) {
-        if (rxBytes.length != ryBytes.length) {
-            // System.out.println("error");
-            return 0;
-        }
-        boolean sameWithRx = true;
-        boolean sameWithRy = true;
-        for (int i = 0; i < rxBytes.length; i++) {
-            byte tmp = (byte) (rxBytes[i] & ryBytes[i]);
-            if (tmp == 0) {
-                return 0;
-            }
-            if (tmp != rxBytes[i]) {
-                sameWithRx = false;
-            }
-            if (tmp != ryBytes[i]) {
-                sameWithRy = false;
-            }
-        }
-
-        if (sameWithRx) {
-            return 2;
-        } else if (sameWithRy) {
-            return 3;
-        } else {
-            return 1;
-        }
-    }
-
 
     /*  基于字段范围的检测方法
         如果交集为空，则返回0
@@ -77,13 +44,13 @@ public class ConflictCheck {
                 if (relation == relations.UNKNOWN) {
                     relation = relations.EXACT;
                 }
-            } else if (isSubset(rxList.get(i), ryList.get(i))) {
+            } else if (HeaderSpaceUtil.headerSpaceUnion(rxList.get(i), ryList.get(i)) == 2) {
                 if (relation == relations.SUBSET || relation == relations.CORRELATED) {
                     relation = relation.CORRELATED;
                 } else {
                     relation = relations.SUPERSET;
                 }
-            } else if (isSubset(ryList.get(i), rxList.get(i))) {
+            } else if (HeaderSpaceUtil.headerSpaceUnion(ryList.get(i), rxList.get(i)) == 3) {
                 if (relation == relations.SUPERSET || relation == relations.CORRELATED) {
                     relation = relations.CORRELATED;
                 } else {
@@ -113,44 +80,42 @@ public class ConflictCheck {
         return anomals.DISJOINT;
     }
 
-    private static boolean isSubset(String x, String y) {
-        System.out.println(x + " " + y);
-        return false;
-    }
 
-    /*
-        index 0 协议类型
-        index 1 原IP地址
-        index 2 目的IP地址
-        index 3 TCP 原端口号
-        index 4 TCP 目的端口号
-        index 5 UDP 原端口号
-        index 6 UDP目的端口号
-     */
     private static List<String> getFiveTupleOfFlowRule(FlowRule flowRule) {
         List<String> result = new ArrayList<>();
         //获取IP五元组
+        //获取协议类型，向下转化为具体的类
+        //IP协议字段不能为空，否则下面无法判断TCP还是UDP 端口
         Criterion ipProtocol = flowRule.selector().getCriterion(Criterion.Type.IP_PROTO);
-
-        if (ipProtocol != null) {
-            result.add(ipProtocol.toString());
+        StringBuffer stringBuffer = new StringBuffer();
+        if (ipProtocol == null) {
+            result.add("xxxxxxxx");
         } else {
-            result.add("*");
+            IPProtocolCriterion ipProtoCriterion = (IPProtocolCriterion) ipProtocol;
+            //首先先添加 IP protocol number: 8 bits
+            String ipProtocolString = Integer.toBinaryString(ipProtoCriterion.protocol());
+            for (int i = 0; i < 8 - ipProtocolString.length(); i++) {
+                stringBuffer.append("0");
+            }
+            stringBuffer.append(ipProtocolString);
         }
-
+        result.add(stringBuffer.toString());
         //这里的IP地址是 IP前缀
         Criterion ipSrc = flowRule.selector().getCriterion(Criterion.Type.IPV4_SRC);
+        //添加原目IP 地址到 HeaderSpace
         if (ipSrc != null) {
-            result.add(ipSrc.toString());
+            IPCriterion ipSrcCriterion = (IPCriterion) ipSrc;
+            result.add(HeaderSpaceUtil.ipToHeaderSpace(ipSrcCriterion));
         } else {
-            result.add("*");
+            result.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         }
 
         Criterion ipDst = flowRule.selector().getCriterion(Criterion.Type.IPV4_DST);
         if (ipDst != null) {
-            result.add(ipDst.toString());
+            IPCriterion ipDstCriterion = (IPCriterion) ipDst;
+            result.add(HeaderSpaceUtil.ipToHeaderSpace(ipDstCriterion));
         } else {
-            result.add("*");
+            result.add("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         }
 
 
@@ -158,48 +123,50 @@ public class ConflictCheck {
         Criterion tcpDstPort = flowRule.selector().getCriterion(Criterion.Type.TCP_DST);
         Criterion tcpSrcPortMask = flowRule.selector().getCriterion(Criterion.Type.TCP_SRC_MASKED);
         Criterion tcpDstPortMask = flowRule.selector().getCriterion(Criterion.Type.TCP_DST_MASKED);
+
+
+        if (tcpSrcPort != null) {
+            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPort;
+            result.add(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
+        } else if (tcpSrcPort == null && tcpSrcPortMask != null) {
+            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPortMask;
+            result.add(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
+        } else {
+            result.add("xxxxxxxxxxxxxxxx");
+        }
+
         Criterion udpSrcPort = flowRule.selector().getCriterion(Criterion.Type.UDP_SRC);
         Criterion udpDstPort = flowRule.selector().getCriterion(Criterion.Type.UDP_DST);
         Criterion udpSrcPortMask = flowRule.selector().getCriterion(Criterion.Type.UDP_SRC_MASKED);
         Criterion udpDstPortMask = flowRule.selector().getCriterion(Criterion.Type.UDP_DST_MASKED);
 
-        if (tcpSrcPort != null) {
-            result.add(tcpSrcPort.toString());
-        } else if (tcpSrcPort == null && tcpSrcPortMask != null) {
-            result.add(tcpDstPortMask.toString());
-        } else {
-            result.add("*");
-        }
-
-        if (tcpDstPort != null) {
-            result.add(tcpDstPort.toString());
-        } else if (tcpDstPort == null && tcpDstPortMask != null) {
-            result.add(tcpDstPortMask.toString());
-        } else {
-            result.add("*");
-        }
-
         if (udpSrcPort != null) {
-            result.add(udpSrcPort.toString());
-        } else if (udpSrcPort == null && udpSrcPortMask != null) {
-            result.add(udpDstPortMask.toString());
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPort;
+            result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
+        } else if (udpSrcPort == null && (udpSrcPortMask != null)) {
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPort;
+            result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else {
-            result.add("*");
+            result.add("xxxxxxxxxxxxxxxx");
         }
 
         if (udpDstPort != null) {
-            result.add(udpDstPort.toString());
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPort;
+            result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else if (udpDstPort == null && udpDstPortMask != null) {
-            result.add(udpDstPortMask.toString());
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPort;
+            result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else {
-            result.add("*");
+            result.add("xxxxxxxxxxxxxxxx");
         }
+
         return result;
     }
 
     private static void getCheckInstructions(TrafficTreatment treatment, Instructions.OutputInstruction outputInstruction,
                                              Instructions.GroupInstruction groupInstruction, Instructions.NoActionInstruction
-                                                     noActionInstruction, Instructions.TableTypeTransition tableTypeTransition) {
+                                                     noActionInstruction, Instructions.TableTypeTransition tableTypeTransition,
+                                             Instructions.MeterInstruction meterInstruction) {
 
         for (Instruction instruction : treatment.allInstructions()) {
             if (instruction instanceof Instructions.OutputInstruction) {
@@ -210,6 +177,8 @@ public class ConflictCheck {
                 noActionInstruction = (Instructions.NoActionInstruction) instruction;
             } else if (instruction instanceof Instructions.TableTypeTransition) {
                 tableTypeTransition = (Instructions.TableTypeTransition) instruction;
+            } else if (instruction instanceof Instructions.MeterInstruction) {
+                meterInstruction = (Instructions.MeterInstruction) instruction;
             }
         }
     }
@@ -228,9 +197,13 @@ public class ConflictCheck {
         Instructions.NoActionInstruction ryNoAction = null;
         Instructions.TableTypeTransition rxTable = null;
         Instructions.TableTypeTransition ryTable = null;
+        //meter指令用来进行QoS,与转发冲突无关
+        Instructions.MeterInstruction rxMeter = null;
+        Instructions.MeterInstruction ryMeter = null;
 
-        getCheckInstructions(rxIns, rxOutput, rxGroup, rxNoAction, rxTable);
-        getCheckInstructions(ryIns, ryOutput, ryGroup, ryNoAction, ryTable);
+
+        getCheckInstructions(rxIns, rxOutput, rxGroup, rxNoAction, rxTable, rxMeter);
+        getCheckInstructions(ryIns, ryOutput, ryGroup, ryNoAction, ryTable, ryMeter);
 
         if (rxOutput != null && ryOutput != null) {
             if (rxOutput.port().equals(rxOutput.port())) {

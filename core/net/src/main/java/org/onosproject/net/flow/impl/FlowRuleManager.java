@@ -407,31 +407,7 @@ public class FlowRuleManager
                 byte[] hsBytes = flowRule.getHsBytes();
                 unionResult = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
             } else if (algorithmChosen == 2) {
-                unionResult = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
-            }
-            boolean insResult = ConflictCheck.instructionConflictCheck(flowRule, tmpRule);
-
-            //如果交集非空,查看指令和动作的冲突情况
-            if (unionResult == 0) {//不相交
-                return isConflict;
-            } else if (unionResult == 1) {//部分相交
-                if (insResult && flowRule.priority() == tmpRule.priority()) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if (unionResult == 2) {//包含关系
-                if (insResult && flowRule.priority() == tmpRule.priority()) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                if (insResult && flowRule.priority() == tmpRule.priority()) {
-                    return true;
-                } else {
-                    return false;
-                }
+                ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
             }
         }
 
