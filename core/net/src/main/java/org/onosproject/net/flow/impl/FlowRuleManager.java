@@ -373,8 +373,10 @@ public class FlowRuleManager
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
+                    long start = System.currentTimeMillis();
                     ConflictCheck.anomals result = conflictCheck(deviceId, tmpRule);
-                    log.info("checkout result *************** "+result + "");
+                    long end = System.currentTimeMillis();
+                    log.info("checkout result *************** " + result + " " + start + " " + end);
                 }
             }
             operationsService.execute(new FlowOperationsProcessor(ops));
