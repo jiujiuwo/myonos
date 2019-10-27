@@ -17,6 +17,9 @@ public class FlowRuleInstallCommand extends AbstractShellCommand {
     @Override
     protected void doExecute() {
         FlowRuleInstall flowRuleInstallService = AbstractShellCommand.get(FlowRuleInstall.class);
-        System.out.println("FlowRule Install command");
+        long start = System.currentTimeMillis();
+        flowRuleInstallService.runTest();
+        long end = System.currentTimeMillis();
+        System.out.println("FlowRule Install command " + (end - start));
     }
 }

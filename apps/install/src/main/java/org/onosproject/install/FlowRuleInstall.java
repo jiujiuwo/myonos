@@ -42,6 +42,12 @@ public class FlowRuleInstall {
         log.info("Application FlowRule Install Started", appId.id());
     }
 
+    public void runTest() {
+        //首先生成并下发一个字段相交的规则
+        //生成并下发两个字段相交或的规则
+        //生成三个字段相交的规则
+    }
+
     public TrafficSelector trafficSelector(byte proto, IpPrefix ipSrc, IpPrefix ipDst, TpPort tcpSrcPort, TpPort srcMask, TpPort tcpDstPort, TpPort dstMask) {
         TrafficSelector.Builder trafficSelector = DefaultTrafficSelector.builder();
         trafficSelector.matchIPProtocol(proto);
@@ -94,6 +100,21 @@ public class FlowRuleInstall {
                 .fromApp(appId)
                 .makePermanent();
         return flowRuleBuilder.build();
+    }
+
+    public void generateFlowRule1() {
+        for (int i = 0; i < 1000; i++) {
+            byte proto = (byte) (Math.random() % 2);
+            IpPrefix ipPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.0.1"), 30);
+        }
+    }
+
+    public void generateFlowRule2() {
+
+    }
+
+    public void generateFlowRule3() {
+
     }
 
     /*

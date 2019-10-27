@@ -394,10 +394,9 @@ public class FlowRuleManager
             int unionResult = 0;
 
             if (algorithmChosen == 1) {
-                byte[] hsBytes = flowRule.getHsBytes();
-                // unionResult = ConflictCheck.headerSpaceConflictCheck(hsBytes, ryBytes);
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
             } else if (algorithmChosen == 2) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule);
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
             }
         }
 

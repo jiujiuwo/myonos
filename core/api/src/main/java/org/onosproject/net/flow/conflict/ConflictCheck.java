@@ -32,7 +32,7 @@ public class ConflictCheck {
         如果交集为空，则返回0
         如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
      */
-    public static anomals filedRangeConflictCheck(FlowRule rxFlowRule, FlowRule ryFLowRule) {
+    public static anomals filedRangeConflictCheck(FlowRule rxFlowRule, FlowRule ryFLowRule, int algorithmChosen) {
 
         relations relation = relations.UNKNOWN;//0 unknown,1 exact, 2 subset,3 superset, 4 intersectant
 
@@ -60,8 +60,15 @@ public class ConflictCheck {
                 return anomals.DISJOINT;
             }
         }
+        boolean insCon = false;
+        if (algorithmChosen == 1) {
+            insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
+        } else if (algorithmChosen == 2) {
+            insCon = instructionConflictCheckOld(rxFlowRule, ryFLowRule);
+        } else {
+            System.exit(-1);
+        }
 
-        boolean insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
         if (relation == relations.CORRELATED && insCon) {
             return anomals.CORRELATION;
         } else if (relation == relations.SUPERSET) {
@@ -134,6 +141,15 @@ public class ConflictCheck {
         } else {
             result.add("xxxxxxxxxxxxxxxx");
         }
+        if (tcpDstPort != null) {
+            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPort;
+            result.add(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
+        } else if (tcpDstPort == null && tcpDstPortMask != null) {
+            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpDstPortMask;
+            result.add(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
+        } else {
+            result.add("xxxxxxxxxxxxxxxx");
+        }
 
         Criterion udpSrcPort = flowRule.selector().getCriterion(Criterion.Type.UDP_SRC);
         Criterion udpDstPort = flowRule.selector().getCriterion(Criterion.Type.UDP_DST);
@@ -182,6 +198,65 @@ public class ConflictCheck {
             }
         }
     }
+
+
+    //处理 output,group，meter指令
+    public static boolean instructionConflictCheckOld(FlowRule rxFlowRule, FlowRule ryFlowRule) {
+
+        TrafficTreatment rxIns = rxFlowRule.treatment();
+        TrafficTreatment ryIns = ryFlowRule.treatment();
+
+        Instructions.OutputInstruction rxOutput = null;
+        Instructions.OutputInstruction ryOutput = null;
+        Instructions.GroupInstruction rxGroup = null;
+        Instructions.GroupInstruction ryGroup = null;
+        Instructions.NoActionInstruction rxNoAction = null;
+        Instructions.NoActionInstruction ryNoAction = null;
+        //meter指令用来进行QoS,与转发冲突无关
+        Instructions.MeterInstruction rxMeter = null;
+        Instructions.MeterInstruction ryMeter = null;
+
+
+        getCheckInstructionsOld(rxIns, rxOutput, rxGroup, rxNoAction, rxMeter);
+        getCheckInstructionsOld(ryIns, ryOutput, ryGroup, ryNoAction, ryMeter);
+
+        if (rxOutput != null && ryOutput != null) {
+            if (rxOutput.port().equals(rxOutput.port())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (rxGroup != null && ryGroup != null) {
+            if (rxGroup.groupId().equals(ryGroup.groupId())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (rxNoAction != null && ryNoAction != null) {
+            return false;
+        } else {
+            return false;
+        }
+
+    }
+
+    private static void getCheckInstructionsOld(TrafficTreatment treatment, Instructions.OutputInstruction outputInstruction,
+                                                Instructions.GroupInstruction groupInstruction, Instructions.NoActionInstruction
+                                                        noActionInstruction, Instructions.MeterInstruction meterInstruction) {
+
+        for (Instruction instruction : treatment.allInstructions()) {
+            if (instruction instanceof Instructions.OutputInstruction) {
+                outputInstruction = (Instructions.OutputInstruction) instruction;
+            } else if (instruction instanceof Instructions.GroupInstruction) {
+                groupInstruction = (Instructions.GroupInstruction) instruction;
+            } else if (instruction instanceof Instructions.NoActionInstruction) {
+                noActionInstruction = (Instructions.NoActionInstruction) instruction;
+            } else if (instruction instanceof Instructions.MeterInstruction) {
+                meterInstruction = (Instructions.MeterInstruction) instruction;
+            }
+        }
+    }
+
 
     //处理 output,group,goto-table，meter指令
     public static boolean instructionConflictCheck(FlowRule rxFlowRule, FlowRule ryFlowRule) {
