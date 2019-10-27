@@ -6,7 +6,7 @@ import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.onosproject.cli.AbstractShellCommand;
 
 @Service
-@Command(scope = "onos", name = "install-FlowRule",
+@Command(scope = "onos", name = "install-flow-rule",
         description = "install flow rules")
 public class FlowRuleInstallCommand extends AbstractShellCommand {
 
@@ -17,6 +17,6 @@ public class FlowRuleInstallCommand extends AbstractShellCommand {
     @Override
     protected void doExecute() {
         FlowRuleInstall flowRuleInstallService = AbstractShellCommand.get(FlowRuleInstall.class);
-
+        System.out.println("FlowRule Install command");
     }
 }

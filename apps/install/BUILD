@@ -5,6 +5,7 @@ COMPILE_DEPS = CORE_DEPS + KRYO + CLI + [
 
 osgi_jar_with_tests(
     karaf_command_packages = ["org.onosproject.install"],
+    suppress_checkstyle = True,
     deps = COMPILE_DEPS,
 )
 
