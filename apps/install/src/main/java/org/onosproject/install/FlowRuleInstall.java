@@ -94,11 +94,10 @@ public class FlowRuleInstall {
                 .withTreatment(treatment)
                 .withPriority(flowPriority)
                 .fromApp(appId)
-                .withIdleTimeout(10);
+                .makePermanent();
 
         FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
         FlowRule tmpFlowRule = flowRuleBuilder.build();
-        log.info("header Space String : " + tmpFlowRule.getHsString());
         flowOpsBuilder = flowOpsBuilder.add(tmpFlowRule);
 
         //初步感觉，冲突检测的代码应该写在apply函数里面

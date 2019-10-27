@@ -119,25 +119,25 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Sample reactive forwarding application.
  */
 @Component(
-    immediate = true,
-    service = ReactiveForwarding.class,
-    property = {
-        PACKET_OUT_ONLY + ":Boolean=" + PACKET_OUT_ONLY_DEFAULT,
-        PACKET_OUT_OFPP_TABLE + ":Boolean=" + PACKET_OUT_OFPP_TABLE_DEFAULT,
-        FLOW_TIMEOUT + ":Integer=" + FLOW_TIMEOUT_DEFAULT,
-        FLOW_PRIORITY  + ":Integer=" + FLOW_PRIORITY_DEFAULT,
-        IPV6_FORWARDING + ":Boolean=" + IPV6_FORWARDING_DEFAULT,
-        MATCH_DST_MAC_ONLY + ":Boolean=" + MATCH_DST_MAC_ONLY_DEFAULT,
-        MATCH_VLAN_ID + ":Boolean=" + MATCH_VLAN_ID_DEFAULT,
-        MATCH_IPV4_ADDRESS + ":Boolean=" + MATCH_IPV4_ADDRESS_DEFAULT,
-        MATCH_IPV4_DSCP + ":Boolean=" + MATCH_IPV4_DSCP_DEFAULT,
-        MATCH_IPV6_ADDRESS + ":Boolean=" + MATCH_IPV6_ADDRESS_DEFAULT,
-        MATCH_IPV6_FLOW_LABEL + ":Boolean=" + MATCH_IPV6_FLOW_LABEL_DEFAULT,
-        MATCH_TCP_UDP_PORTS + ":Boolean=" + MATCH_TCP_UDP_PORTS_DEFAULT,
-        MATCH_ICMP_FIELDS + ":Boolean=" + MATCH_ICMP_FIELDS_DEFAULT,
-        IGNORE_IPV4_MCAST_PACKETS + ":Boolean=" + IGNORE_IPV4_MCAST_PACKETS_DEFAULT,
-        RECORD_METRICS + ":Boolean=" + RECORD_METRICS_DEFAULT
-    }
+        immediate = true,
+        service = ReactiveForwarding.class,
+        property = {
+                PACKET_OUT_ONLY + ":Boolean=" + PACKET_OUT_ONLY_DEFAULT,
+                PACKET_OUT_OFPP_TABLE + ":Boolean=" + PACKET_OUT_OFPP_TABLE_DEFAULT,
+                FLOW_TIMEOUT + ":Integer=" + FLOW_TIMEOUT_DEFAULT,
+                FLOW_PRIORITY + ":Integer=" + FLOW_PRIORITY_DEFAULT,
+                IPV6_FORWARDING + ":Boolean=" + IPV6_FORWARDING_DEFAULT,
+                MATCH_DST_MAC_ONLY + ":Boolean=" + MATCH_DST_MAC_ONLY_DEFAULT,
+                MATCH_VLAN_ID + ":Boolean=" + MATCH_VLAN_ID_DEFAULT,
+                MATCH_IPV4_ADDRESS + ":Boolean=" + MATCH_IPV4_ADDRESS_DEFAULT,
+                MATCH_IPV4_DSCP + ":Boolean=" + MATCH_IPV4_DSCP_DEFAULT,
+                MATCH_IPV6_ADDRESS + ":Boolean=" + MATCH_IPV6_ADDRESS_DEFAULT,
+                MATCH_IPV6_FLOW_LABEL + ":Boolean=" + MATCH_IPV6_FLOW_LABEL_DEFAULT,
+                MATCH_TCP_UDP_PORTS + ":Boolean=" + MATCH_TCP_UDP_PORTS_DEFAULT,
+                MATCH_ICMP_FIELDS + ":Boolean=" + MATCH_ICMP_FIELDS_DEFAULT,
+                IGNORE_IPV4_MCAST_PACKETS + ":Boolean=" + IGNORE_IPV4_MCAST_PACKETS_DEFAULT,
+                RECORD_METRICS + ":Boolean=" + RECORD_METRICS_DEFAULT
+        }
 )
 public class ReactiveForwarding {
 
@@ -169,53 +169,83 @@ public class ReactiveForwarding {
 
     private ReactivePacketProcessor processor = new ReactivePacketProcessor();
 
-    private  EventuallyConsistentMap<MacAddress, ReactiveForwardMetrics> metrics;
+    private EventuallyConsistentMap<MacAddress, ReactiveForwardMetrics> metrics;
 
     private ApplicationId appId;
 
-    /** Enable packet-out only forwarding; default is false. */
+    /**
+     * Enable packet-out only forwarding; default is false.
+     */
     private boolean packetOutOnly = PACKET_OUT_ONLY_DEFAULT;
 
-    /** Enable first packet forwarding using OFPP_TABLE port instead of PacketOut with actual port; default is false. */
+    /**
+     * Enable first packet forwarding using OFPP_TABLE port instead of PacketOut with actual port; default is false.
+     */
     private boolean packetOutOfppTable = PACKET_OUT_OFPP_TABLE_DEFAULT;
 
-    /** Configure Flow Timeout for installed flow rules; default is 10 sec. */
+    /**
+     * Configure Flow Timeout for installed flow rules; default is 10 sec.
+     */
     private int flowTimeout = FLOW_TIMEOUT_DEFAULT;
 
-    /** Configure Flow Priority for installed flow rules; default is 10. */
+    /**
+     * Configure Flow Priority for installed flow rules; default is 10.
+     */
     private int flowPriority = FLOW_PRIORITY_DEFAULT;
 
-    /** Enable IPv6 forwarding; default is false. */
+    /**
+     * Enable IPv6 forwarding; default is false.
+     */
     private boolean ipv6Forwarding = IPV6_FORWARDING_DEFAULT;
 
-    /** Enable matching Dst Mac Only; default is false. */
+    /**
+     * Enable matching Dst Mac Only; default is false.
+     */
     private boolean matchDstMacOnly = MATCH_DST_MAC_ONLY_DEFAULT;
 
-    /** Enable matching Vlan ID; default is false. */
+    /**
+     * Enable matching Vlan ID; default is false.
+     */
     private boolean matchVlanId = MATCH_VLAN_ID_DEFAULT;
 
-    /** Enable matching IPv4 Addresses; default is false. */
+    /**
+     * Enable matching IPv4 Addresses; default is false.
+     */
     private boolean matchIpv4Address = MATCH_IPV4_ADDRESS_DEFAULT;
 
-    /** Enable matching IPv4 DSCP and ECN; default is false. */
+    /**
+     * Enable matching IPv4 DSCP and ECN; default is false.
+     */
     private boolean matchIpv4Dscp = MATCH_IPV4_DSCP_DEFAULT;
 
-    /** Enable matching IPv6 Addresses; default is false. */
+    /**
+     * Enable matching IPv6 Addresses; default is false.
+     */
     private boolean matchIpv6Address = MATCH_IPV6_ADDRESS_DEFAULT;
 
-    /** Enable matching IPv6 FlowLabel; default is false. */
+    /**
+     * Enable matching IPv6 FlowLabel; default is false.
+     */
     private boolean matchIpv6FlowLabel = MATCH_IPV6_FLOW_LABEL_DEFAULT;
 
-    /** Enable matching TCP/UDP ports; default is false. */
+    /**
+     * Enable matching TCP/UDP ports; default is false.
+     */
     private boolean matchTcpUdpPorts = MATCH_TCP_UDP_PORTS_DEFAULT;
 
-    /** Enable matching ICMPv4 and ICMPv6 fields; default is false. */
+    /**
+     * Enable matching ICMPv4 and ICMPv6 fields; default is false.
+     */
     private boolean matchIcmpFields = MATCH_ICMP_FIELDS_DEFAULT;
 
-    /** Ignore (do not forward) IPv4 multicast packets; default is false. */
+    /**
+     * Ignore (do not forward) IPv4 multicast packets; default is false.
+     */
     private boolean ignoreIPv4Multicast = IGNORE_IPV4_MCAST_PACKETS_DEFAULT;
 
-    /** Enable record metrics for reactive forwarding. */
+    /**
+     * Enable record metrics for reactive forwarding.
+     */
     private boolean recordMetrics = RECORD_METRICS_DEFAULT;
 
     private final TopologyListener topologyListener = new InternalTopologyListener();
@@ -229,7 +259,7 @@ public class ReactiveForwarding {
                 .register(KryoNamespaces.API)
                 .register(ReactiveForwardMetrics.class)
                 .register(MultiValuedTimestamp.class);
-        metrics =  storageService.<MacAddress, ReactiveForwardMetrics>eventuallyConsistentMapBuilder()
+        metrics = storageService.<MacAddress, ReactiveForwardMetrics>eventuallyConsistentMapBuilder()
                 .withName("metrics-fwd")
                 .withSerializer(metricSerializer)
                 .withTimestampProvider((key, metricsData) -> new
@@ -237,8 +267,8 @@ public class ReactiveForwarding {
                 .build();
 
         blackHoleExecutor = newSingleThreadExecutor(groupedThreads("onos/app/fwd",
-                                                                   "black-hole-fixer",
-                                                                   log));
+                "black-hole-fixer",
+                log));
 
         cfgService.registerProperties(getClass());
         appId = coreService.registerApplication("org.onosproject.fwd");
@@ -309,7 +339,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, PACKET_OUT_ONLY);
         if (packetOutOnlyEnabled == null) {
             log.info("Packet-out is not configured, " +
-                     "using current value of {}", packetOutOnly);
+                    "using current value of {}", packetOutOnly);
         } else {
             packetOutOnly = packetOutOnlyEnabled;
             log.info("Configured. Packet-out only forwarding is {}",
@@ -320,7 +350,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, PACKET_OUT_OFPP_TABLE);
         if (packetOutOfppTableEnabled == null) {
             log.info("OFPP_TABLE port is not configured, " +
-                     "using current value of {}", packetOutOfppTable);
+                    "using current value of {}", packetOutOfppTable);
         } else {
             packetOutOfppTable = packetOutOfppTableEnabled;
             log.info("Configured. Forwarding using OFPP_TABLE port is {}",
@@ -331,7 +361,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, IPV6_FORWARDING);
         if (ipv6ForwardingEnabled == null) {
             log.info("IPv6 forwarding is not configured, " +
-                     "using current value of {}", ipv6Forwarding);
+                    "using current value of {}", ipv6Forwarding);
         } else {
             ipv6Forwarding = ipv6ForwardingEnabled;
             log.info("Configured. IPv6 forwarding is {}",
@@ -342,7 +372,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_DST_MAC_ONLY);
         if (matchDstMacOnlyEnabled == null) {
             log.info("Match Dst MAC is not configured, " +
-                     "using current value of {}", matchDstMacOnly);
+                    "using current value of {}", matchDstMacOnly);
         } else {
             matchDstMacOnly = matchDstMacOnlyEnabled;
             log.info("Configured. Match Dst MAC Only is {}",
@@ -353,7 +383,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_VLAN_ID);
         if (matchVlanIdEnabled == null) {
             log.info("Matching Vlan ID is not configured, " +
-                     "using current value of {}", matchVlanId);
+                    "using current value of {}", matchVlanId);
         } else {
             matchVlanId = matchVlanIdEnabled;
             log.info("Configured. Matching Vlan ID is {}",
@@ -364,7 +394,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_IPV4_ADDRESS);
         if (matchIpv4AddressEnabled == null) {
             log.info("Matching IPv4 Address is not configured, " +
-                     "using current value of {}", matchIpv4Address);
+                    "using current value of {}", matchIpv4Address);
         } else {
             matchIpv4Address = matchIpv4AddressEnabled;
             log.info("Configured. Matching IPv4 Addresses is {}",
@@ -375,7 +405,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_IPV4_DSCP);
         if (matchIpv4DscpEnabled == null) {
             log.info("Matching IPv4 DSCP and ECN is not configured, " +
-                     "using current value of {}", matchIpv4Dscp);
+                    "using current value of {}", matchIpv4Dscp);
         } else {
             matchIpv4Dscp = matchIpv4DscpEnabled;
             log.info("Configured. Matching IPv4 DSCP and ECN is {}",
@@ -386,7 +416,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_IPV6_ADDRESS);
         if (matchIpv6AddressEnabled == null) {
             log.info("Matching IPv6 Address is not configured, " +
-                     "using current value of {}", matchIpv6Address);
+                    "using current value of {}", matchIpv6Address);
         } else {
             matchIpv6Address = matchIpv6AddressEnabled;
             log.info("Configured. Matching IPv6 Addresses is {}",
@@ -397,7 +427,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_IPV6_FLOW_LABEL);
         if (matchIpv6FlowLabelEnabled == null) {
             log.info("Matching IPv6 FlowLabel is not configured, " +
-                     "using current value of {}", matchIpv6FlowLabel);
+                    "using current value of {}", matchIpv6FlowLabel);
         } else {
             matchIpv6FlowLabel = matchIpv6FlowLabelEnabled;
             log.info("Configured. Matching IPv6 FlowLabel is {}",
@@ -408,7 +438,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_TCP_UDP_PORTS);
         if (matchTcpUdpPortsEnabled == null) {
             log.info("Matching TCP/UDP fields is not configured, " +
-                     "using current value of {}", matchTcpUdpPorts);
+                    "using current value of {}", matchTcpUdpPorts);
         } else {
             matchTcpUdpPorts = matchTcpUdpPortsEnabled;
             log.info("Configured. Matching TCP/UDP fields is {}",
@@ -419,7 +449,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, MATCH_ICMP_FIELDS);
         if (matchIcmpFieldsEnabled == null) {
             log.info("Matching ICMP (v4 and v6) fields is not configured, " +
-                     "using current value of {}", matchIcmpFields);
+                    "using current value of {}", matchIcmpFields);
         } else {
             matchIcmpFields = matchIcmpFieldsEnabled;
             log.info("Configured. Matching ICMP (v4 and v6) fields is {}",
@@ -430,7 +460,7 @@ public class ReactiveForwarding {
                 Tools.isPropertyEnabled(properties, IGNORE_IPV4_MCAST_PACKETS);
         if (ignoreIpv4McastPacketsEnabled == null) {
             log.info("Ignore IPv4 multi-cast packet is not configured, " +
-                     "using current value of {}", ignoreIPv4Multicast);
+                    "using current value of {}", ignoreIPv4Multicast);
         } else {
             ignoreIPv4Multicast = ignoreIpv4McastPacketsEnabled;
             log.info("Configured. Ignore IPv4 multicast packets is {}",
@@ -527,8 +557,8 @@ public class ReactiveForwarding {
             // destination edge switch.
             Set<Path> paths =
                     topologyService.getPaths(topologyService.currentTopology(),
-                                             pkt.receivedFrom().deviceId(),
-                                             dst.location().deviceId());
+                            pkt.receivedFrom().deviceId(),
+                            dst.location().deviceId());
             if (paths.isEmpty()) {
                 // If there are no paths, flood and bail.
                 flood(context, macMetrics);
@@ -540,7 +570,7 @@ public class ReactiveForwarding {
             Path path = pickForwardPathIfPossible(paths, pkt.receivedFrom().port());
             if (path == null) {
                 log.warn("Don't know where to go from here {} for {} -> {}",
-                         pkt.receivedFrom(), ethPkt.getSourceMAC(), ethPkt.getDestinationMAC());
+                        pkt.receivedFrom(), ethPkt.getSourceMAC(), ethPkt.getDestinationMAC());
                 flood(context, macMetrics);
                 return;
             }
@@ -576,7 +606,7 @@ public class ReactiveForwarding {
     // Floods the specified packet if permissible.
     private void flood(PacketContext context, ReactiveForwardMetrics macMetrics) {
         if (topologyService.isBroadcastPoint(topologyService.currentTopology(),
-                                             context.inPacket().receivedFrom())) {
+                context.inPacket().receivedFrom())) {
             packetOut(context, PortNumber.FLOOD, macMetrics);
         } else {
             context.block();
@@ -627,15 +657,16 @@ public class ReactiveForwarding {
             // If configured and EtherType is IPv4 - Match IPv4 and
             // TCP/UDP/ICMP fields
             //
+            matchIpv4Address = true;
             if (matchIpv4Address && inPkt.getEtherType() == Ethernet.TYPE_IPV4) {
                 IPv4 ipv4Packet = (IPv4) inPkt.getPayload();
                 byte ipv4Protocol = ipv4Packet.getProtocol();
                 Ip4Prefix matchIp4SrcPrefix =
                         Ip4Prefix.valueOf(ipv4Packet.getSourceAddress(),
-                                          Ip4Prefix.MAX_MASK_LENGTH);
+                                Ip4Prefix.MAX_MASK_LENGTH);
                 Ip4Prefix matchIp4DstPrefix =
                         Ip4Prefix.valueOf(ipv4Packet.getDestinationAddress(),
-                                          Ip4Prefix.MAX_MASK_LENGTH);
+                                Ip4Prefix.MAX_MASK_LENGTH);
                 selectorBuilder.matchEthType(Ethernet.TYPE_IPV4)
                         .matchIPSrc(matchIp4SrcPrefix)
                         .matchIPDst(matchIp4DstPrefix);
@@ -675,10 +706,10 @@ public class ReactiveForwarding {
                 byte ipv6NextHeader = ipv6Packet.getNextHeader();
                 Ip6Prefix matchIp6SrcPrefix =
                         Ip6Prefix.valueOf(ipv6Packet.getSourceAddress(),
-                                          Ip6Prefix.MAX_MASK_LENGTH);
+                                Ip6Prefix.MAX_MASK_LENGTH);
                 Ip6Prefix matchIp6DstPrefix =
                         Ip6Prefix.valueOf(ipv6Packet.getDestinationAddress(),
-                                          Ip6Prefix.MAX_MASK_LENGTH);
+                                Ip6Prefix.MAX_MASK_LENGTH);
                 selectorBuilder.matchEthType(Ethernet.TYPE_IPV6)
                         .matchIPv6Src(matchIp6SrcPrefix)
                         .matchIPv6Dst(matchIp6DstPrefix);
@@ -731,18 +762,18 @@ public class ReactiveForwarding {
                 .withTreatment(treatment)
                 .withPriority(flowPriority)
                 .fromApp(appId)
-                .withIdleTimeout(10);
+                .makePermanent();
 
         FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
         FlowRule tmpFlowRule = flowRuleBuilder.build();
-        log.info("header Space String : "+tmpFlowRule.getHsString());
+        log.info("header Space String : " + tmpFlowRule.getHsString());
         flowOpsBuilder = flowOpsBuilder.add(tmpFlowRule);
 
         //初步感觉，冲突检测的代码应该写在apply函数里面
         flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
             @Override
             public void onSuccess(FlowRuleOperations ops) {
-               // log.info(ops.stages().get(0).)
+                // log.info(ops.stages().get(0).)
                 log.info("FlowRule安装成功");
             }
 
@@ -827,7 +858,7 @@ public class ReactiveForwarding {
 
                 Set<Path> pathsFromCurDevice =
                         topologyService.getPaths(topologyService.currentTopology(),
-                                                 curDevice, dstId);
+                                curDevice, dstId);
                 if (pickForwardPathIfPossible(pathsFromCurDevice, curLink.src().port()) != null) {
                     break;
                 } else {
@@ -900,7 +931,7 @@ public class ReactiveForwarding {
         return macMetrics;
     }
 
-    private void  forwardPacket(ReactiveForwardMetrics macmetrics) {
+    private void forwardPacket(ReactiveForwardMetrics macmetrics) {
         if (recordMetrics) {
             macmetrics.incrementForwardedPacket();
             metrics.put(macmetrics.getMacAddress(), macmetrics);
