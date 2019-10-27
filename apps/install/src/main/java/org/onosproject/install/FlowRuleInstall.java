@@ -3,9 +3,12 @@ package org.onosproject.install;
 import org.onlab.packet.*;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
+import org.onosproject.core.GroupId;
+import org.onosproject.net.DeviceId;
 import org.onosproject.net.PortNumber;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.flowobjective.FlowObjectiveService;
+import org.onosproject.net.group.Group;
 import org.onosproject.net.packet.PacketContext;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -37,6 +40,60 @@ public class FlowRuleInstall {
     public void activate(ComponentContext context) {
         appId = coreService.registerApplication("org.onosproject.install");
         log.info("Application FlowRule Install Started", appId.id());
+    }
+
+    public TrafficSelector trafficSelector(byte proto, IpPrefix ipSrc, IpPrefix ipDst, TpPort tcpSrcPort, TpPort srcMask, TpPort tcpDstPort, TpPort dstMask) {
+        TrafficSelector.Builder trafficSelector = DefaultTrafficSelector.builder();
+        trafficSelector.matchIPProtocol(proto);
+        trafficSelector.matchIPSrc(ipSrc);
+        trafficSelector.matchIPDst(ipDst);
+        if (proto == IPv4.PROTOCOL_TCP) {
+            trafficSelector.matchTcpSrcMasked(tcpSrcPort, srcMask);
+            trafficSelector.matchTcpDstMasked(tcpDstPort, dstMask);
+        } else if (proto == IPv4.PROTOCOL_UDP) {
+            trafficSelector.matchUdpSrcMasked(tcpSrcPort, srcMask);
+            trafficSelector.matchUdpDstMasked(tcpDstPort, dstMask);
+        }
+        return trafficSelector.build();
+    }
+
+    public TrafficTreatment outputTreatment(PortNumber portNumber) {
+        TrafficTreatment treatment = DefaultTrafficTreatment.builder()
+                .setOutput(portNumber)
+                .build();
+        return treatment;
+    }
+
+    public TrafficTreatment tableTreatment(int tableId) {
+        TrafficTreatment treatment = DefaultTrafficTreatment.builder()
+                .transition(tableId)
+                .build();
+        return treatment;
+    }
+
+    public TrafficTreatment groupTreatment(GroupId groupId) {
+        TrafficTreatment treatment = DefaultTrafficTreatment.builder()
+                .group(groupId)
+                .build();
+        return treatment;
+    }
+
+    public TrafficTreatment dropTreatment(int tableId) {
+        TrafficTreatment treatment = DefaultTrafficTreatment.builder()
+                .drop()
+                .build();
+        return treatment;
+    }
+
+    public FlowRule createFlowRule(TrafficTreatment treatment, TrafficSelector selector, DeviceId deviceId, int priority) {
+        FlowRule.Builder flowRuleBuilder = DefaultFlowRule.builder()
+                .forDevice(deviceId)
+                .withSelector(selector)
+                .withTreatment(treatment)
+                .withPriority(priority)
+                .fromApp(appId)
+                .makePermanent();
+        return flowRuleBuilder.build();
     }
 
     /*
