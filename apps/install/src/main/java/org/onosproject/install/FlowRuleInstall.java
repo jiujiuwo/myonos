@@ -44,6 +44,7 @@ public class FlowRuleInstall {
 
     public void runTest() {
         //首先生成并下发一个字段相交的规则
+        generateFlowRule1();
         //生成并下发两个字段相交或的规则
         //生成三个字段相交的规则
     }
@@ -52,6 +53,7 @@ public class FlowRuleInstall {
         TrafficSelector.Builder trafficSelector = DefaultTrafficSelector.builder();
         trafficSelector.matchIPProtocol(proto);
         trafficSelector.matchIPSrc(ipSrc);
+        trafficSelector.matchEthType(Ethernet.TYPE_IPV4);
         trafficSelector.matchIPDst(ipDst);
         if (proto == IPv4.PROTOCOL_TCP) {
             trafficSelector.matchTcpSrcMasked(tcpSrcPort, srcMask);
@@ -102,11 +104,36 @@ public class FlowRuleInstall {
         return flowRuleBuilder.build();
     }
 
+    public void installFlowRule(FlowRule tmpFlowRule) {
+        FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
+        flowOpsBuilder = flowOpsBuilder.add(tmpFlowRule);
+
+        flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
+            @Override
+            public void onSuccess(FlowRuleOperations ops) {
+                // log.info(ops.stages().get(0).)
+                log.info("FlowRule安装成功");
+            }
+
+            @Override
+            public void onError(FlowRuleOperations ops) {
+                log.info("流规则安装失败");
+            }
+        }));
+    }
+
     public void generateFlowRule1() {
-        for (int i = 0; i < 1000; i++) {
-            byte proto = (byte) (Math.random() % 2);
-            IpPrefix ipPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.0.1"), 30);
-        }
+        IpPrefix ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.1.1"), 16);
+        IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
+        byte proto = IPv4.PROTOCOL_TCP;
+        TpPort tcpSrc = TpPort.tpPort(1024);
+        TpPort tcpSrcMask = TpPort.tpPort(0xFFFF);
+        TpPort tcpDst = TpPort.tpPort(1024);
+        TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
+        TrafficSelector trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
+        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+        installFlowRule(flowRule);
     }
 
     public void generateFlowRule2() {

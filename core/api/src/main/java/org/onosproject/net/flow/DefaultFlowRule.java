@@ -482,7 +482,8 @@ public class DefaultFlowRule implements FlowRule {
             TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPort;
             headerSpace.append(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
         } else if (tcpSrcPort == null && (tcpSrcPortMask != null)) {
-            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPort;
+            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPortMask;
+            System.out.println(tcpPortCriterion.toString());
             headerSpace.append(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
         } else {
             headerSpace.append("xxxxxxxxxxxxxxxx");
@@ -492,7 +493,7 @@ public class DefaultFlowRule implements FlowRule {
             TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpDstPort;
             headerSpace.append(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
         } else if (tcpDstPort == null && tcpDstPortMask != null) {
-            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpDstPort;
+            TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpDstPortMask;
             headerSpace.append(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
         } else {
             headerSpace.append("xxxxxxxxxxxxxxxx");
@@ -507,7 +508,7 @@ public class DefaultFlowRule implements FlowRule {
             UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPort;
             headerSpace.append(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else if (udpSrcPort == null && (udpSrcPortMask != null)) {
-            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPort;
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPortMask;
             headerSpace.append(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else {
             headerSpace.append("xxxxxxxxxxxxxxxx");
