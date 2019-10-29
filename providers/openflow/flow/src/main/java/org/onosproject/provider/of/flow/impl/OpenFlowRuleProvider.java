@@ -135,10 +135,14 @@ public class OpenFlowRuleProvider extends AbstractProvider
     private static final int MIN_EXPECTED_BYTE_LEN = 56;
     private static final int SKIP_BYTES = 4;
 
-    /** Frequency (in seconds) for polling flow statistics. */
+    /**
+     * Frequency (in seconds) for polling flow statistics.
+     */
     private int flowPollFrequency = POLL_FREQUENCY_DEFAULT;
 
-    /** Adaptive Flow Sampling is on or off. */
+    /**
+     * Adaptive Flow Sampling is on or off.
+     */
     private boolean adaptiveFlowSampling = ADAPTIVE_FLOW_SAMPLING_DEFAULT;
 
     private FlowRuleProviderService providerService;
@@ -231,7 +235,7 @@ public class OpenFlowRuleProvider extends AbstractProvider
                 .removalListener((RemovalNotification<Long, InternalCacheEntry> notification) -> {
                     if (notification.getCause() == RemovalCause.EXPIRED) {
                         providerService.batchOperationCompleted(notification.getKey(),
-                                                                notification.getValue().failedCompletion());
+                                notification.getValue().failedCompletion());
                     }
                 }).build();
     }
@@ -341,7 +345,7 @@ public class OpenFlowRuleProvider extends AbstractProvider
             return;
         }
         sw.sendMsg(FlowModBuilder.builder(flowRule, sw.factory(),
-                                          Optional.empty(), Optional.of(driverService)).buildFlowDel());
+                Optional.empty(), Optional.of(driverService)).buildFlowDel());
     }
 
     @Override
@@ -361,7 +365,7 @@ public class OpenFlowRuleProvider extends AbstractProvider
         if (sw == null) {
             Set<FlowRule> failures = ImmutableSet.copyOf(Lists.transform(batch.getOperations(), e -> e.target()));
             providerService.batchOperationCompleted(batch.id(),
-                                                    new CompletedBatchOperation(false, failures, batch.deviceId()));
+                    new CompletedBatchOperation(false, failures, batch.deviceId()));
             return;
         }
         pendingBatches.put(batch.id(), new InternalCacheEntry(batch));
@@ -462,10 +466,10 @@ public class OpenFlowRuleProvider extends AbstractProvider
                         if (entry != null) {
                             providerService
                                     .batchOperationCompleted(msg.getXid(),
-                                                             entry.completed());
+                                            entry.completed());
                         } else {
                             log.warn("Received unknown Barrier Reply: {}",
-                                     msg.getXid());
+                                    msg.getXid());
                         }
                     } finally {
                         pendingBatches.invalidate(msg.getXid());
@@ -518,45 +522,45 @@ public class OpenFlowRuleProvider extends AbstractProvider
                 default:
                     // Do nothing.
                     return;
+            }
+
+            if (ofMessage != null) {
+
+                if (entry != null) {
+                    OFFlowMod ofFlowMod = (OFFlowMod) ofMessage;
+                    entry.appendFailure(new FlowEntryBuilder(deviceId, ofFlowMod, getDriver(deviceId)).build());
+                } else {
+                    log.error("No matching batch for this error: {}", error);
                 }
 
-                if (ofMessage != null) {
+            } else {
 
-                    if (entry != null)  {
-                        OFFlowMod ofFlowMod = (OFFlowMod) ofMessage;
-                        entry.appendFailure(new FlowEntryBuilder(deviceId, ofFlowMod, getDriver(deviceId)).build());
+                U64 cookieId = readCookieIdFromOFErrorMsg(error, msg.getVersion());
+
+                if (cookieId != null) {
+                    long flowId = cookieId.getValue();
+
+                    if (entry != null) {
+                        for (FlowRuleBatchEntry fbEntry : entry.operation.getOperations()) {
+                            if (fbEntry.target().id().value() == flowId) {
+                                entry.appendFailure(fbEntry.target());
+                                break;
+                            }
+                        }
                     } else {
-                      log.error("No matching batch for this error: {}", error);
+                        log.error("No matching batch for this error: {}", error);
                     }
 
                 } else {
-
-                    U64 cookieId = readCookieIdFromOFErrorMsg(error, msg.getVersion());
-
-                    if (cookieId != null) {
-                        long flowId = cookieId.getValue();
-
-                        if (entry != null) {
-                            for (FlowRuleBatchEntry fbEntry : entry.operation.getOperations()) {
-                                if (fbEntry.target().id().value() == flowId) {
-                                    entry.appendFailure(fbEntry.target());
-                                    break;
-                                }
-                            }
-                        } else {
-                            log.error("No matching batch for this error: {}", error);
-                        }
-
-                    } else {
-                        log.error("Flow installation failed but switch " +
-                                "didn't tell us which one.");
-                    }
+                    log.error("Flow installation failed but switch " +
+                            "didn't tell us which one.");
                 }
+            }
         }
 
         /**
          * Reading cookieId from OFErrorMsg.
-         *
+         * <p>
          * Loxigen OpenFlow API failed in parsing error messages because of
          * 64 byte data truncation based on OpenFlow specs. The method written
          * is a workaround to extract the cookieId from the packet till the
@@ -564,7 +568,7 @@ public class OpenFlowRuleProvider extends AbstractProvider
          * Ref: https://groups.google.com/a/onosproject.org/forum/#!topic
          * /onos-dev/_KwlHZDllLE
          *
-         * @param msg OF error message
+         * @param msg       OF error message
          * @param ofVersion Openflow version
          * @return cookieId
          */
@@ -573,7 +577,7 @@ public class OpenFlowRuleProvider extends AbstractProvider
 
             if (ofVersion.wireVersion < OFVersion.OF_13.wireVersion) {
                 log.debug("Unhandled error msg with OF version {} " +
-                        "which is less than {}",
+                                "which is less than {}",
                         ofVersion, OFVersion.OF_13);
                 return null;
             }
@@ -631,16 +635,16 @@ public class OpenFlowRuleProvider extends AbstractProvider
             DeviceId did = DeviceId.deviceId(Dpid.uri(dpid));
             NewAdaptiveFlowStatsCollector afsc = afsCollectors.get(dpid);
 
-            if (adaptiveFlowSampling && afsc != null)  {
+            if (adaptiveFlowSampling && afsc != null) {
                 List<FlowEntry> flowEntries = replies.getEntries().stream()
                         .map(entry -> new FlowEntryBuilder(did, entry, handler).withSetAfsc(afsc).build())
                         .collect(Collectors.toList());
 
                 // Check that OFFlowStatsReply Xid is same with the one of OFFlowStatsRequest?
                 if (afsc.getFlowMissingXid() != NewAdaptiveFlowStatsCollector.NO_FLOW_MISSING_XID) {
-                        log.debug("OpenFlowRuleProvider:pushFlowMetrics, flowMissingXid={}, "
-                                          + "OFFlowStatsReply Xid={}, for {}",
-                                  afsc.getFlowMissingXid(), replies.getXid(), dpid);
+                    log.debug("OpenFlowRuleProvider:pushFlowMetrics, flowMissingXid={}, "
+                                    + "OFFlowStatsReply Xid={}, for {}",
+                            afsc.getFlowMissingXid(), replies.getXid(), dpid);
                     if (afsc.getFlowMissingXid() == replies.getXid()) {
                         // call entire flow stats update with flowMissing synchronization.
                         // used existing pushFlowMetrics
@@ -676,7 +680,7 @@ public class OpenFlowRuleProvider extends AbstractProvider
 
             DeviceId did = DeviceId.deviceId(Dpid.uri(dpid));
             NewAdaptiveFlowStatsCollector afsc = afsCollectors.get(dpid);
-            if (adaptiveFlowSampling && afsc != null)  {
+            if (adaptiveFlowSampling && afsc != null) {
                 List<FlowEntry> flowEntries = replies.getEntries().stream()
                         .map(entry -> new FlowEntryBuilder(did, entry, driverService).withSetAfsc(afsc).build())
                         .collect(Collectors.toList());
@@ -771,9 +775,9 @@ public class OpenFlowRuleProvider extends AbstractProvider
             Set<FlowRule> fails = operation.getOperations().stream()
                     .map(op -> op.target()).collect(Collectors.toSet());
             return new CompletedBatchOperation(false,
-                                               Collections
-                                                       .unmodifiableSet(fails),
-                                               operation.deviceId());
+                    Collections
+                            .unmodifiableSet(fails),
+                    operation.deviceId());
         }
 
         /**

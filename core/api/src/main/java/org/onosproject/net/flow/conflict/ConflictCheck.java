@@ -160,7 +160,7 @@ public class ConflictCheck {
             UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPort;
             result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else if (udpSrcPort == null && (udpSrcPortMask != null)) {
-            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPort;
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpSrcPortMask;
             result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else {
             result.add("xxxxxxxxxxxxxxxx");
@@ -170,7 +170,7 @@ public class ConflictCheck {
             UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPort;
             result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else if (udpDstPort == null && udpDstPortMask != null) {
-            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPort;
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPortMask;
             result.add(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else {
             result.add("xxxxxxxxxxxxxxxx");

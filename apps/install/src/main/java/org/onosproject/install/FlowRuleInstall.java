@@ -7,6 +7,7 @@ import org.onosproject.core.GroupId;
 import org.onosproject.net.DeviceId;
 import org.onosproject.net.PortNumber;
 import org.onosproject.net.flow.*;
+import org.onosproject.net.flow.conflict.ConflictCheck;
 import org.onosproject.net.flowobjective.FlowObjectiveService;
 import org.onosproject.net.group.Group;
 import org.onosproject.net.packet.PacketContext;
@@ -16,6 +17,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.slf4j.Logger;
+
+import java.util.List;
+import java.util.Set;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -113,11 +117,26 @@ public class FlowRuleInstall {
             public void onSuccess(FlowRuleOperations ops) {
                 // log.info(ops.stages().get(0).)
                 log.info("FlowRule安装成功");
+                List<Set<FlowRuleOperation>> stages = ops.stages();
+
+                for (Set<FlowRuleOperation> flowRuleSet : stages) {
+                    for (FlowRuleOperation flowRuleOp : flowRuleSet) {
+                        FlowRule tmpRule = flowRuleOp.rule();
+                        log.info(tmpRule.toString());
+                    }
+                }
             }
 
             @Override
             public void onError(FlowRuleOperations ops) {
                 log.info("流规则安装失败");
+                List<Set<FlowRuleOperation>> stages = ops.stages();
+                for (Set<FlowRuleOperation> flowRuleSet : stages) {
+                    for (FlowRuleOperation flowRuleOp : flowRuleSet) {
+                        FlowRule tmpRule = flowRuleOp.rule();
+                        log.info(tmpRule.toString());
+                    }
+                }
             }
         }));
     }
@@ -134,6 +153,20 @@ public class FlowRuleInstall {
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
         installFlowRule(flowRule);
+        for (int i = 1; i <= 100; i++) {
+            for (int j = 1; j <= 100; j++) {
+                int random = (int) (Math.random() * 10);
+                if (random % 2 == 0) {
+                    proto = IPv4.PROTOCOL_TCP;
+                } else {
+                    proto = IPv4.PROTOCOL_UDP;
+                }
+                ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
+                trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+                installFlowRule(flowRule);
+            }
+        }
     }
 
     public void generateFlowRule2() {

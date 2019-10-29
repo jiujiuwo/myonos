@@ -518,7 +518,7 @@ public class DefaultFlowRule implements FlowRule {
             UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPort;
             headerSpace.append(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else if (udpDstPort == null && udpDstPortMask != null) {
-            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPort;
+            UdpPortCriterion udpPortCriterion = (UdpPortCriterion) udpDstPortMask;
             headerSpace.append(HeaderSpaceUtil.udpPortToHeaderSpace(udpPortCriterion));
         } else {
             headerSpace.append("xxxxxxxxxxxxxxxx");
