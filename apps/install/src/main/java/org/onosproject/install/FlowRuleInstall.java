@@ -38,6 +38,7 @@ public class FlowRuleInstall {
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected CoreService coreService;
 
+
     private ApplicationId appId;
 
     @Activate
@@ -46,9 +47,17 @@ public class FlowRuleInstall {
         log.info("Application FlowRule Install Started", appId.id());
     }
 
-    public void runTest() {
+    public void runTest(int conflictFields) {
         //首先生成并下发一个字段相交的规则
-        generateFlowRule1();
+        if (conflictFields == 1) {
+            generateFlowRule1();
+        } else if (conflictFields == 2) {
+            generateFlowRule2();
+        } else if (conflictFields == 3) {
+            generateFlowRule3();
+        } else {
+            log.info("error conflictFields");
+        }
         //生成并下发两个字段相交或的规则
         //生成三个字段相交的规则
     }
@@ -90,7 +99,7 @@ public class FlowRuleInstall {
         return treatment;
     }
 
-    public TrafficTreatment dropTreatment(int tableId) {
+    public TrafficTreatment dropTreatment() {
         TrafficTreatment treatment = DefaultTrafficTreatment.builder()
                 .drop()
                 .build();
@@ -153,6 +162,7 @@ public class FlowRuleInstall {
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
         installFlowRule(flowRule);
+        int count = 0;
         for (int i = 1; i <= 10; i++) {
             for (int j = 1; j <= 100; j++) {
                 int random = (int) (Math.random() * 10);
@@ -163,10 +173,22 @@ public class FlowRuleInstall {
                 }
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+                int randomIns = (int) (Math.random() * 10) % 4;
+                if (randomIns == 0) {
+                    trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
+                } else if (randomIns == 1) {
+                    trafficTreatment = groupTreatment(new GroupId((int) (Math.random() * 100)));
+                } else if (randomIns == 2) {
+                    trafficTreatment = tableTreatment((int) (Math.random() * 100));
+                } else if (randomIns == 3) {
+                    trafficTreatment = dropTreatment();
+                }
                 flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
                 installFlowRule(flowRule);
+                count++;
             }
         }
+        log.info("Install FlowRules " + count);
     }
 
     public void generateFlowRule2() {
@@ -175,82 +197,6 @@ public class FlowRuleInstall {
 
     public void generateFlowRule3() {
 
-    }
-
-    /*
-        根据数据包来安装流规则，不能安装具有mask的规则
-     */
-    private void installRule(PacketContext context, int flowPriority, PortNumber portNumber) {
-        //
-        // We don't support (yet) buffer IDs in the Flow Service so
-        // packet out first.
-        //
-        Ethernet inPkt = context.inPacket().parsed();
-        TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
-
-
-        //
-        // If configured and EtherType is IPv4 - Match IPv4 and
-        // TCP/UDP/ICMP fields
-        //
-        if (inPkt.getEtherType() == Ethernet.TYPE_IPV4) {
-            IPv4 ipv4Packet = (IPv4) inPkt.getPayload();
-            byte ipv4Protocol = ipv4Packet.getProtocol();
-            Ip4Prefix matchIp4SrcPrefix =
-                    Ip4Prefix.valueOf(ipv4Packet.getSourceAddress(),
-                            Ip4Prefix.MAX_MASK_LENGTH);
-            Ip4Prefix matchIp4DstPrefix =
-                    Ip4Prefix.valueOf(ipv4Packet.getDestinationAddress(),
-                            Ip4Prefix.MAX_MASK_LENGTH);
-            selectorBuilder.matchEthType(Ethernet.TYPE_IPV4)
-                    .matchIPSrc(matchIp4SrcPrefix)
-                    .matchIPDst(matchIp4DstPrefix);
-
-
-            if (ipv4Protocol == IPv4.PROTOCOL_TCP) {
-                TCP tcpPacket = (TCP) ipv4Packet.getPayload();
-                selectorBuilder.matchIPProtocol(ipv4Protocol)
-                        .matchTcpSrc(TpPort.tpPort(tcpPacket.getSourcePort()))
-                        .matchTcpDst(TpPort.tpPort(tcpPacket.getDestinationPort()));
-            }
-            if (ipv4Protocol == IPv4.PROTOCOL_UDP) {
-                UDP udpPacket = (UDP) ipv4Packet.getPayload();
-                selectorBuilder.matchIPProtocol(ipv4Protocol)
-                        .matchUdpSrc(TpPort.tpPort(udpPacket.getSourcePort()))
-                        .matchUdpDst(TpPort.tpPort(udpPacket.getDestinationPort()));
-            }
-        }
-
-
-        TrafficTreatment treatment = DefaultTrafficTreatment.builder()
-                .setOutput(portNumber)
-                .build();
-
-        FlowRule.Builder flowRuleBuilder = DefaultFlowRule.builder()
-                .forDevice(context.inPacket().receivedFrom().deviceId())
-                .withSelector(selectorBuilder.build())
-                .withTreatment(treatment)
-                .withPriority(flowPriority)
-                .fromApp(appId)
-                .makePermanent();
-
-        FlowRuleOperations.Builder flowOpsBuilder = FlowRuleOperations.builder();
-        FlowRule tmpFlowRule = flowRuleBuilder.build();
-        flowOpsBuilder = flowOpsBuilder.add(tmpFlowRule);
-
-        //初步感觉，冲突检测的代码应该写在apply函数里面
-        flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
-            @Override
-            public void onSuccess(FlowRuleOperations ops) {
-                // log.info(ops.stages().get(0).)
-                log.info("FlowRule安装成功");
-            }
-
-            @Override
-            public void onError(FlowRuleOperations ops) {
-                log.info("流规则安装失败");
-            }
-        }));
     }
 
 }

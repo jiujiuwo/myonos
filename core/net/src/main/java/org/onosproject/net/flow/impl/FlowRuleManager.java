@@ -148,7 +148,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
-    private int algorithmChosen = 2;
+    private int algorithmChosen = 1;
 
     @Activate
     public void activate(ComponentContext context) {
@@ -373,10 +373,7 @@ public class FlowRuleManager
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
-                    long start = System.currentTimeMillis();
                     ConflictCheck.anomals result = conflictCheck(deviceId, tmpRule);
-                    long end = System.currentTimeMillis();
-                    log.info("checkout result *************** " + result + " " + start + " " + end);
                 }
             }
             operationsService.execute(new FlowOperationsProcessor(ops));
@@ -390,14 +387,10 @@ public class FlowRuleManager
 
         byte[] ryBytes = tmpRule.getHsBytes();
         for (FlowRule flowRule : flowRules) {
-            //uionResult,0表示交集为空，1表示部分相交，2表示Rx包含Ry,3表示Ry包含Rx
-            int unionResult = 0;
-
-            if (algorithmChosen == 1) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-            } else if (algorithmChosen == 2) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-            }
+            result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+            log.info(result.toString());
+            log.info(tmpRule.toString());
+            log.info(flowRule.toString());
         }
 
         return result;
