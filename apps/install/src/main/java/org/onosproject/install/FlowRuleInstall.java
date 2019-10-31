@@ -41,6 +41,8 @@ public class FlowRuleInstall {
 
     private ApplicationId appId;
 
+    private String deviceId = "";
+
     @Activate
     public void activate(ComponentContext context) {
         appId = coreService.registerApplication("org.onosproject.install");
@@ -55,11 +57,25 @@ public class FlowRuleInstall {
             generateFlowRule2();
         } else if (conflictFields == 3) {
             generateFlowRule3();
-        } else {
-            log.info("error conflictFields");
+        } else if (conflictFields == 0) {
+            generateFlowRule();
+        } else if (conflictFields == -1) {
+            clearFlowRules();
         }
         //生成并下发两个字段相交或的规则
         //生成三个字段相交的规则
+    }
+
+    public List<Long> getTimes() {
+        return flowRuleService.getTimes();
+    }
+
+    public void clearTimes() {
+        flowRuleService.getTimes().clear();
+    }
+
+    private void clearFlowRules() {
+        flowRuleService.purgeFlowRules(DeviceId.deviceId("of:0000000000000001"));
     }
 
     public TrafficSelector trafficSelector(byte proto, IpPrefix ipSrc, IpPrefix ipDst, TpPort tcpSrcPort, TpPort srcMask, TpPort tcpDstPort, TpPort dstMask) {
@@ -124,16 +140,6 @@ public class FlowRuleInstall {
         flowRuleService.apply(flowOpsBuilder.build(new FlowRuleOperationsContext() {
             @Override
             public void onSuccess(FlowRuleOperations ops) {
-                // log.info(ops.stages().get(0).)
-                log.info("FlowRule安装成功");
-                List<Set<FlowRuleOperation>> stages = ops.stages();
-
-                for (Set<FlowRuleOperation> flowRuleSet : stages) {
-                    for (FlowRuleOperation flowRuleOp : flowRuleSet) {
-                        FlowRule tmpRule = flowRuleOp.rule();
-                        log.info(tmpRule.toString());
-                    }
-                }
             }
 
             @Override
@@ -148,6 +154,30 @@ public class FlowRuleInstall {
                 }
             }
         }));
+    }
+
+    public void generateFlowRule() {
+        IpPrefix ipSrcPrefix;
+        IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
+        byte proto;
+        TpPort tcpSrc = TpPort.tpPort(1024);
+        TpPort tcpSrcMask = TpPort.tpPort(0xFFFF);
+        TpPort tcpDst = TpPort.tpPort(1024);
+        TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
+        TrafficSelector trafficSelector;
+        TrafficTreatment trafficTreatment;
+        FlowRule flowRule;
+
+        for (int i = 1; i <= 10; i++) {
+            for (int j = 1; j <= 100; j++) {
+                proto = IPv4.PROTOCOL_TCP;
+                ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
+                trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+                trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+                installFlowRule(flowRule);
+            }
+        }
     }
 
     public void generateFlowRule1() {
@@ -198,5 +228,4 @@ public class FlowRuleInstall {
     public void generateFlowRule3() {
 
     }
-
 }

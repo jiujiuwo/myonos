@@ -222,6 +222,11 @@ public class VirtualNetworkFlowRuleManager
         return store.getTableStatistics(networkId(), deviceId);
     }
 
+    @Override
+    public List<Long> getTimes() {
+        return null;
+    }
+
     private static FlowRuleBatchEntry.FlowRuleOperation mapOperationType(FlowRuleOperation.Type input) {
         switch (input) {
             case ADD:

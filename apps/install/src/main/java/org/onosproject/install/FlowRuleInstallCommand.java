@@ -21,5 +21,6 @@ public class FlowRuleInstallCommand extends AbstractShellCommand {
         flowRuleInstallService.runTest(conflictFields);
         long end = System.currentTimeMillis();
         System.out.println("FlowRule Install command " + (end - start));
+        System.out.println(flowRuleInstallService.getTimes().toString());
     }
 }

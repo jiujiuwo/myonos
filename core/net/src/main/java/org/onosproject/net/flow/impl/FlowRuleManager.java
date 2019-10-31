@@ -55,6 +55,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -148,7 +149,8 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
-    private int algorithmChosen = 1;
+    private int algorithmChosen = 0;
+    private static List<Long> times = new LinkedList<>();
 
     @Activate
     public void activate(ComponentContext context) {
@@ -285,6 +287,7 @@ public class FlowRuleManager
         for (FlowRule flowRule : flowRules) {
             builder.add(flowRule);
         }
+
         apply(builder.build());
     }
 
@@ -363,19 +366,24 @@ public class FlowRuleManager
     @Override
     public void apply(FlowRuleOperations ops) {
         checkPermission(FLOWRULE_WRITE);
-
         if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
         } else {
             List<Set<FlowRuleOperation>> stages = ops.stages();
+            long start = System.currentTimeMillis();
 
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
+
                     FlowRule tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
                     ConflictCheck.anomals result = conflictCheck(deviceId, tmpRule);
                 }
             }
+            long end = System.currentTimeMillis();
+            long tmp = end - start;
+
+            times.add(tmp);
             operationsService.execute(new FlowOperationsProcessor(ops));
         }
 
@@ -388,9 +396,7 @@ public class FlowRuleManager
         byte[] ryBytes = tmpRule.getHsBytes();
         for (FlowRule flowRule : flowRules) {
             result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-            log.info(result.toString());
-            log.info(tmpRule.toString());
-            log.info(flowRule.toString());
+            //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
         }
 
         return result;
@@ -796,6 +802,11 @@ public class FlowRuleManager
     public long getActiveFlowRuleCount(DeviceId deviceId) {
         checkNotNull(deviceId, DEVICE_ID_NULL);
         return store.getActiveFlowRuleCount(deviceId);
+    }
+
+    @Override
+    public List<Long> getTimes() {
+        return times;
     }
 
     private class InternalDeviceListener implements DeviceListener {

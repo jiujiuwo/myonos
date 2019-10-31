@@ -19,6 +19,8 @@ package org.onosproject.net.flow;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.net.DeviceId;
 
+import java.util.List;
+
 /**
  * Test adapter for flow rule service.
  */
@@ -78,6 +80,11 @@ public class FlowRuleServiceAdapter implements FlowRuleService {
 
     @Override
     public Iterable<TableStatisticsEntry> getFlowTableStatistics(DeviceId deviceId) {
+        return null;
+    }
+
+    @Override
+    public List<Long> getTimes() {
         return null;
     }
 }

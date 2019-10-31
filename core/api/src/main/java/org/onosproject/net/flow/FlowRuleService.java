@@ -20,6 +20,8 @@ import org.onosproject.core.ApplicationId;
 import org.onosproject.event.ListenerService;
 import org.onosproject.net.DeviceId;
 
+import java.util.List;
+
 /**
  * Service for injecting flow rules into the environment and for obtaining
  * information about flow rules already in the environment. This implements
@@ -28,7 +30,7 @@ import org.onosproject.net.DeviceId;
  * 'cached' copy.
  */
 public interface FlowRuleService
-    extends ListenerService<FlowRuleEvent, FlowRuleListener> {
+        extends ListenerService<FlowRuleEvent, FlowRuleListener> {
 
     /**
      * The topic used for obtaining globally unique ids.
@@ -56,7 +58,7 @@ public interface FlowRuleService
      * Returns the number of flow rules in the given state for the given device.
      *
      * @param deviceId the device identifier
-     * @param state the state for which to count flow rules
+     * @param state    the state for which to count flow rules
      * @return number of flow rules in the given state for the given device
      */
     default int getFlowRuleCount(DeviceId deviceId, FlowEntry.FlowEntryState state) {
@@ -81,19 +83,19 @@ public interface FlowRuleService
      * @return collection of flow entries
      */
     default Iterable<FlowEntry> getFlowEntriesByLiveType(DeviceId deviceId,
-                                                 FlowEntry.FlowLiveType liveType) {
+                                                         FlowEntry.FlowLiveType liveType) {
         return Iterables.filter(getFlowEntries(deviceId), fe -> fe.liveType() == liveType);
     }
 
     /**
      * Returns a list of rules filtered by device id and flow state.
      *
-     * @param deviceId the device id to lookup
+     * @param deviceId  the device id to lookup
      * @param flowState the flow state to lookup
      * @return collection of flow entries
      */
     default Iterable<FlowEntry> getFlowEntriesByState(DeviceId deviceId,
-                                                 FlowEntry.FlowEntryState flowState) {
+                                                      FlowEntry.FlowEntryState flowState) {
         return Iterables.filter(getFlowEntries(deviceId), fe -> fe.state() == flowState);
     }
 
@@ -110,6 +112,7 @@ public interface FlowRuleService
 
     /**
      * Purges all the flow rules on the specified device.
+     *
      * @param deviceId device identifier
      */
     void purgeFlowRules(DeviceId deviceId);
@@ -156,7 +159,7 @@ public interface FlowRuleService
      * return flows that are mapped to a particular {@link org.onosproject.net.group.Group}.
      * </p>
      *
-     * @param appId the application ID to look up
+     * @param appId   the application ID to look up
      * @param groupId the group ID to look up
      * @return collection of flow rules
      */
@@ -188,4 +191,6 @@ public interface FlowRuleService
     default long getActiveFlowRuleCount(DeviceId deviceId) {
         return 0;
     }
+
+    List<Long> getTimes();
 }

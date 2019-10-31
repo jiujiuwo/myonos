@@ -483,7 +483,7 @@ public class DefaultFlowRule implements FlowRule {
             headerSpace.append(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
         } else if (tcpSrcPort == null && (tcpSrcPortMask != null)) {
             TcpPortCriterion tcpPortCriterion = (TcpPortCriterion) tcpSrcPortMask;
-            System.out.println(tcpPortCriterion.toString());
+            //System.out.println(tcpPortCriterion.toString());
             headerSpace.append(HeaderSpaceUtil.tcpPortToHeaderSpace(tcpPortCriterion));
         } else {
             headerSpace.append("xxxxxxxxxxxxxxxx");
