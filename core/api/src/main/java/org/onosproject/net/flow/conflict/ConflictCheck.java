@@ -62,11 +62,9 @@ public class ConflictCheck {
         }
         boolean insCon = false;
         if (algorithmChosen == 1) {
-            insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
-        } else if (algorithmChosen == 2) {
             insCon = instructionConflictCheckOld(rxFlowRule, ryFLowRule);
-        } else {
-            System.exit(-1);
+        } else if (algorithmChosen == 2) {
+            insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
         }
 
         if (relation == relations.CORRELATED && insCon) {
@@ -181,8 +179,7 @@ public class ConflictCheck {
 
     private static void getCheckInstructions(TrafficTreatment treatment, Instructions.OutputInstruction outputInstruction,
                                              Instructions.GroupInstruction groupInstruction, Instructions.NoActionInstruction
-                                                     noActionInstruction, Instructions.TableTypeTransition tableTypeTransition,
-                                             Instructions.MeterInstruction meterInstruction) {
+                                                     noActionInstruction, Instructions.TableTypeTransition tableTypeTransition) {
 
         for (Instruction instruction : treatment.allInstructions()) {
             if (instruction instanceof Instructions.OutputInstruction) {
@@ -193,8 +190,6 @@ public class ConflictCheck {
                 noActionInstruction = (Instructions.NoActionInstruction) instruction;
             } else if (instruction instanceof Instructions.TableTypeTransition) {
                 tableTypeTransition = (Instructions.TableTypeTransition) instruction;
-            } else if (instruction instanceof Instructions.MeterInstruction) {
-                meterInstruction = (Instructions.MeterInstruction) instruction;
             }
         }
     }
@@ -232,10 +227,16 @@ public class ConflictCheck {
             } else {
                 return true;
             }
+        } else if (rxMeter != null && ryMeter != null) {
+            if (rxMeter.meterId().equals(ryMeter.meterId())) {
+                return false;
+            } else {
+                return true;
+            }
         } else if (rxNoAction != null && ryNoAction != null) {
             return false;
         } else {
-            return false;
+            return true;
         }
 
     }
@@ -277,8 +278,8 @@ public class ConflictCheck {
         Instructions.MeterInstruction ryMeter = null;
 
 
-        getCheckInstructions(rxIns, rxOutput, rxGroup, rxNoAction, rxTable, rxMeter);
-        getCheckInstructions(ryIns, ryOutput, ryGroup, ryNoAction, ryTable, ryMeter);
+        getCheckInstructions(rxIns, rxOutput, rxGroup, rxNoAction, rxTable);
+        getCheckInstructions(ryIns, ryOutput, ryGroup, ryNoAction, ryTable);
 
         if (rxOutput != null && ryOutput != null) {
             if (rxOutput.port().equals(rxOutput.port())) {
@@ -301,7 +302,7 @@ public class ConflictCheck {
                 return true;
             }
         } else {
-            return false;
+            return true;
         }
 
     }

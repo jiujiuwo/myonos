@@ -369,8 +369,8 @@ public class FlowRuleManager
         if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
         } else {
-            List<Set<FlowRuleOperation>> stages = ops.stages();
             long start = System.currentTimeMillis();
+            List<Set<FlowRuleOperation>> stages = ops.stages();
 
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {

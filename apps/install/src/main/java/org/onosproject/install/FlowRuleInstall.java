@@ -52,15 +52,20 @@ public class FlowRuleInstall {
     public void runTest(int conflictFields) {
         //首先生成并下发一个字段相交的规则
         if (conflictFields == 1) {
+            clearTimes();
             generateFlowRule1();
         } else if (conflictFields == 2) {
+            clearTimes();
             generateFlowRule2();
         } else if (conflictFields == 3) {
+            clearTimes();
             generateFlowRule3();
         } else if (conflictFields == 0) {
+            clearTimes();
             generateFlowRule();
-        } else if (conflictFields == -1) {
-            clearFlowRules();
+        } else {
+            clearTimes();
+            generateFlowRule();
         }
         //生成并下发两个字段相交或的规则
         //生成三个字段相交的规则
