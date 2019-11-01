@@ -214,8 +214,8 @@ public class FlowRuleInstall {
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
         installFlowRule(flowRule);
         int count = 0;
-        for (int i = 1; i <= 5; i++) {
-            for (int j = 1; j <= 1; j++) {
+        for (int i = 1; i <= 10; i++) {
+            for (int j = 1; j <= 100; j++) {
                 int random = (int) (Math.random() * 10);
                 if (random % 2 == 0) {
                     proto = IPv4.PROTOCOL_TCP;
