@@ -394,7 +394,7 @@ public class FlowRuleManager
         ConflictCheck.anomals result = ConflictCheck.anomals.DISJOINT;
         List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
         for (FlowRule flowRule : flowRules) {
-            result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+            result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen, log);
             log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
         }
 
