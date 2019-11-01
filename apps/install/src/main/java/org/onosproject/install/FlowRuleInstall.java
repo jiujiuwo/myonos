@@ -4,8 +4,10 @@ import org.onlab.packet.*;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
 import org.onosproject.core.GroupId;
+import org.onosproject.net.Device;
 import org.onosproject.net.DeviceId;
 import org.onosproject.net.PortNumber;
+import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.flow.conflict.ConflictCheck;
 import org.onosproject.net.flowobjective.FlowObjectiveService;
@@ -33,6 +35,9 @@ public class FlowRuleInstall {
     protected FlowRuleService flowRuleService;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
+    protected DeviceService deviceService;
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected FlowObjectiveService flowObjectiveService;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
@@ -41,7 +46,7 @@ public class FlowRuleInstall {
 
     private ApplicationId appId;
 
-    private String deviceId = "";
+    private DeviceId deviceId;
 
     @Activate
     public void activate(ComponentContext context) {
@@ -50,25 +55,39 @@ public class FlowRuleInstall {
     }
 
     public void runTest(int conflictFields) {
+        initDevice();
         //首先生成并下发一个字段相交的规则
         if (conflictFields == 1) {
             clearTimes();
+            flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule1();
         } else if (conflictFields == 2) {
             clearTimes();
+            flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule2();
         } else if (conflictFields == 3) {
             clearTimes();
+            flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule3();
         } else if (conflictFields == 0) {
             clearTimes();
+            flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule();
         } else {
             clearTimes();
+            flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule();
         }
         //生成并下发两个字段相交或的规则
         //生成三个字段相交的规则
+    }
+
+    private void initDevice() {
+        Iterable<Device> iterater = deviceService.getAvailableDevices();
+        for (Device device : iterater) {
+            deviceId = device.id();
+            break;
+        }
     }
 
     public List<Long> getTimes() {
@@ -79,9 +98,6 @@ public class FlowRuleInstall {
         flowRuleService.getTimes().clear();
     }
 
-    private void clearFlowRules() {
-        flowRuleService.purgeFlowRules(DeviceId.deviceId("of:0000000000000001"));
-    }
 
     public TrafficSelector trafficSelector(byte proto, IpPrefix ipSrc, IpPrefix ipDst, TpPort tcpSrcPort, TpPort srcMask, TpPort tcpDstPort, TpPort dstMask) {
         TrafficSelector.Builder trafficSelector = DefaultTrafficSelector.builder();
@@ -208,6 +224,38 @@ public class FlowRuleInstall {
                 }
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+                trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+                installFlowRule(flowRule);
+                count++;
+            }
+        }
+        log.info("Install FlowRules " + count);
+    }
+
+    public void generateFlowRule2() {
+        IpPrefix ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.1.1"), 16);
+        IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
+        byte proto = IPv4.PROTOCOL_TCP;
+        TpPort tcpSrc = TpPort.tpPort(1024);
+        TpPort tcpSrcMask = TpPort.tpPort(0xFFFF);
+        TpPort tcpDst = TpPort.tpPort(1024);
+        TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
+        TrafficSelector trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
+        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+        installFlowRule(flowRule);
+        int count = 0;
+        for (int i = 1; i <= 10; i++) {
+            for (int j = 1; j <= 100; j++) {
+                int random = (int) (Math.random() * 10);
+                if (random % 2 == 0) {
+                    proto = IPv4.PROTOCOL_TCP;
+                } else {
+                    proto = IPv4.PROTOCOL_UDP;
+                }
+                ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
+                trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
                 int randomIns = (int) (Math.random() * 10) % 4;
                 if (randomIns == 0) {
                     trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
@@ -224,10 +272,6 @@ public class FlowRuleInstall {
             }
         }
         log.info("Install FlowRules " + count);
-    }
-
-    public void generateFlowRule2() {
-
     }
 
     public void generateFlowRule3() {

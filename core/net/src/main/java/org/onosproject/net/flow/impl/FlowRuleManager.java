@@ -149,7 +149,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
-    private int algorithmChosen = 0;
+    private int algorithmChosen = 1;
     private static List<Long> times = new LinkedList<>();
 
     @Activate
