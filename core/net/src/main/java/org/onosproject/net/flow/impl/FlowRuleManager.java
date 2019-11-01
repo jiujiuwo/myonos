@@ -384,6 +384,7 @@ public class FlowRuleManager
             long tmp = end - start;
 
             times.add(tmp);
+
             operationsService.execute(new FlowOperationsProcessor(ops));
         }
 
@@ -392,11 +393,9 @@ public class FlowRuleManager
     private ConflictCheck.anomals conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
         ConflictCheck.anomals result = ConflictCheck.anomals.DISJOINT;
         List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
-
-        byte[] ryBytes = tmpRule.getHsBytes();
         for (FlowRule flowRule : flowRules) {
             result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-            //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+            log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
         }
 
         return result;

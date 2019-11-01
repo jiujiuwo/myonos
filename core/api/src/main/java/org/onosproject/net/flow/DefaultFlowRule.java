@@ -118,8 +118,10 @@ public class DefaultFlowRule implements FlowRule {
 
         // todo rewrite the toString method
         //this.hsString = selector.toString();
+/*
         this.hsString = selectorTranslate(selector);
         this.hsBytes = HeaderSpaceUtil.hsStringToBytes(this.hsString);
+*/
 
 
         //FIXME: fields below will be removed.
@@ -191,9 +193,9 @@ public class DefaultFlowRule implements FlowRule {
         this.created = System.currentTimeMillis();
         this.payLoad = payLoad;
 
-        // todo rewrite the toString method
+/*        // todo rewrite the toString method
         this.hsString = selectorTranslate(selector);
-        this.hsBytes = HeaderSpaceUtil.hsStringToBytes(this.hsString);
+        this.hsBytes = HeaderSpaceUtil.hsStringToBytes(this.hsString);*/
 
 
         /*
@@ -272,9 +274,9 @@ public class DefaultFlowRule implements FlowRule {
         this.payLoad = payLoad;
 
         // todo rewrite the toString method
-        //this.hsString = selector.toString();
+/*        //this.hsString = selector.toString();
         this.hsString = selectorTranslate(selector);
-        this.hsBytes = HeaderSpaceUtil.hsStringToBytes(this.hsString);
+        this.hsBytes = HeaderSpaceUtil.hsStringToBytes(this.hsString);*/
 
 
         /*
