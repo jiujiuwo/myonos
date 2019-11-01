@@ -39,8 +39,6 @@ public class ConflictCheck {
 
         List<String> rxList = getFiveTupleOfFlowRule(rxFlowRule);
         List<String> ryList = getFiveTupleOfFlowRule(ryFLowRule);
-        log.info(rxList.toString());
-        log.info(ryList.toString());
         for (int i = 0; i < rxList.size(); i++) {
             if (rxList.get(i).equals(ryList.get(i))) {
                 if (relation == relations.UNKNOWN) {
@@ -70,7 +68,6 @@ public class ConflictCheck {
         } else if (algorithmChosen == 2) {
             insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
         }
-        log.info(insCon + "");
         if (relation == relations.CORRELATED && insCon) {
             return anomals.CORRELATION;
         } else if (relation == relations.SUPERSET) {
@@ -222,7 +219,7 @@ public class ConflictCheck {
             }
         }
         if (rxOutput != null && ryOutput != null) {
-            if (rxOutput.port().equals(rxOutput.port())) {
+            if (rxOutput.port().equals(ryOutput.port())) {
                 return false;
             } else {
                 return true;
@@ -288,7 +285,7 @@ public class ConflictCheck {
             }
         }
         if (rxOutput != null && ryOutput != null) {
-            if (rxOutput.port().equals(rxOutput.port())) {
+            if (rxOutput.port().equals(ryOutput.port())) {
                 return false;
             } else {
                 return true;
