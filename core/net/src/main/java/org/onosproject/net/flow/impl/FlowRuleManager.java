@@ -392,11 +392,21 @@ public class FlowRuleManager
 
     private ConflictCheck.anomals conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
         ConflictCheck.anomals result = ConflictCheck.anomals.DISJOINT;
-        List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
-        for (FlowRule flowRule : flowRules) {
-            result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen, log);
-            //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+
+        if (algorithmChosen == 1) {
+            Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
+            for (FlowRule flowRule : flowRules) {
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen, log);
+                //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+            }
+        } else if (algorithmChosen == 2) {
+            List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
+            for (FlowRule flowRule : flowRules) {
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen, log);
+                //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+            }
         }
+
 
         return result;
     }

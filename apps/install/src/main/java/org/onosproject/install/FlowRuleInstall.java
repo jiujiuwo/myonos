@@ -143,9 +143,10 @@ public class FlowRuleInstall {
         return treatment;
     }
 
-    public FlowRule createFlowRule(TrafficTreatment treatment, TrafficSelector selector, DeviceId deviceId, int priority) {
+    public FlowRule createFlowRule(TrafficTreatment treatment, TrafficSelector selector, DeviceId deviceId, int priority, int tableId) {
         FlowRule.Builder flowRuleBuilder = DefaultFlowRule.builder()
                 .forDevice(deviceId)
+                .forTable(tableId)
                 .withSelector(selector)
                 .withTreatment(treatment)
                 .withPriority(priority)
@@ -195,12 +196,15 @@ public class FlowRuleInstall {
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
                 trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
-                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
                 installFlowRule(flowRule);
             }
         }
     }
 
+    /*
+        生成1000条规则，并安装在表0
+     */
     public void generateFlowRule1() {
         IpPrefix ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.1.1"), 16);
         IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
@@ -211,7 +215,7 @@ public class FlowRuleInstall {
         TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
         TrafficSelector trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
-        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
         installFlowRule(flowRule);
         int count = 0;
         for (int i = 1; i <= 10; i++) {
@@ -225,7 +229,7 @@ public class FlowRuleInstall {
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
                 trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
-                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40, 0);
                 installFlowRule(flowRule);
                 count++;
             }
@@ -243,8 +247,9 @@ public class FlowRuleInstall {
         TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
         TrafficSelector trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
-        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
         installFlowRule(flowRule);
+        int tableId = (int) (Math.random() * 10) % 10;
         int count = 0;
         for (int i = 1; i <= 10; i++) {
             for (int j = 1; j <= 100; j++) {
@@ -256,17 +261,8 @@ public class FlowRuleInstall {
                 }
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
-                int randomIns = (int) (Math.random() * 10) % 4;
-                if (randomIns == 0) {
-                    trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
-                } else if (randomIns == 1) {
-                    trafficTreatment = groupTreatment(new GroupId((int) (Math.random() * 100)));
-                } else if (randomIns == 2) {
-                    trafficTreatment = tableTreatment((int) (Math.random() * 100));
-                } else if (randomIns == 3) {
-                    trafficTreatment = dropTreatment();
-                }
-                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40);
+                trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40, tableId);
                 installFlowRule(flowRule);
                 count++;
             }
