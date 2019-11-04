@@ -33,40 +33,49 @@ public class ConflictCheck {
         如果交集为空，则返回0
         如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
      */
-    public static anomals filedRangeConflictCheck(FlowRule rxFlowRule, FlowRule ryFLowRule, int algorithmChosen, Logger log) {
-
+    public static anomals filedRangeConflictCheck(FlowRule rxFlowRule, FlowRule ryFLowRule, int algorithmChosen) {
         relations relation = relations.UNKNOWN;//0 unknown,1 exact, 2 subset,3 superset, 4 intersectant
-
-        List<String> rxList = getFiveTupleOfFlowRule(rxFlowRule);
-        List<String> ryList = getFiveTupleOfFlowRule(ryFLowRule);
-        for (int i = 0; i < rxList.size(); i++) {
-            if (rxList.get(i).equals(ryList.get(i))) {
-                if (relation == relations.UNKNOWN) {
-                    relation = relations.EXACT;
-                }
-                //如果Ry包含Rx,即交集为Rx,sameWithRx
-            } else if (HeaderSpaceUtil.headerSpaceUnion(rxList.get(i), ryList.get(i)) == 2) {
-                if (relation == relations.SUBSET || relation == relations.CORRELATED) {
-                    relation = relation.CORRELATED;
-                } else {
-                    relation = relations.SUPERSET;
-                }
-                //如果Rx包含Ry,即交集为Ry,sameWithRx
-            } else if (HeaderSpaceUtil.headerSpaceUnion(rxList.get(i), ryList.get(i)) == 3) {
-                if (relation == relations.SUPERSET || relation == relations.CORRELATED) {
-                    relation = relations.CORRELATED;
-                } else {
-                    relation = relations.SUBSET;
-                }
-            } else {
-                return anomals.DISJOINT;
-            }
-        }
         boolean insCon = false;
         if (algorithmChosen == 1) {
+            List<String> rxList = getFiveTupleOfFlowRule(rxFlowRule);
+            List<String> ryList = getFiveTupleOfFlowRule(ryFLowRule);
+            for (int i = 0; i < rxList.size(); i++) {
+                if (rxList.get(i).equals(ryList.get(i))) {
+                    if (relation == relations.UNKNOWN) {
+                        relation = relations.EXACT;
+                    }
+                    //如果Ry包含Rx,即交集为Rx,sameWithRx
+                } else if (HeaderSpaceUtil.headerSpaceUnion(rxList.get(i), ryList.get(i)) == 2) {
+                    if (relation == relations.SUBSET || relation == relations.CORRELATED) {
+                        relation = relation.CORRELATED;
+                    } else {
+                        relation = relations.SUPERSET;
+                    }
+                    //如果Rx包含Ry,即交集为Ry,sameWithRx
+                } else if (HeaderSpaceUtil.headerSpaceUnion(rxList.get(i), ryList.get(i)) == 3) {
+                    if (relation == relations.SUPERSET || relation == relations.CORRELATED) {
+                        relation = relations.CORRELATED;
+                    } else {
+                        relation = relations.SUBSET;
+                    }
+                } else {
+                    return anomals.DISJOINT;
+                }
+            }
             insCon = instructionConflictCheckOld(rxFlowRule, ryFLowRule);
+
         } else if (algorithmChosen == 2) {
-            insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
+            int result = HeaderSpaceUtil.headerSpaceConflictCheck(rxFlowRule.getHsBytes(), ryFLowRule.getHsBytes());
+            if (result == 1) {
+                relation = relations.CORRELATED;
+            } else if (result == 2) {
+                relation = relations.SUBSET;
+            } else if (result == 3) {
+                relation = relations.SUPERSET;
+            } else if (result == 4) {
+                relation = relations.EXACT;
+            }
+            insCon = instructionConflictCheckOld(rxFlowRule, ryFLowRule);
         }
         if (relation == relations.CORRELATED && insCon) {
             return anomals.CORRELATION;
@@ -83,6 +92,7 @@ public class ConflictCheck {
                 return anomals.SHADOWING;
             }
         }
+
         return anomals.DISJOINT;
     }
 

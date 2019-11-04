@@ -217,6 +217,11 @@ public class FlowRuleInstall {
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
         installFlowRule(flowRule);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         int count = 0;
         for (int i = 1; i <= 10; i++) {
             for (int j = 1; j <= 100; j++) {
@@ -249,6 +254,11 @@ public class FlowRuleInstall {
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
         installFlowRule(flowRule);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         int count = 0;
         for (int i = 1; i <= 10; i++) {
             for (int j = 1; j <= 100; j++) {
@@ -262,7 +272,7 @@ public class FlowRuleInstall {
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
                 trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
                 int tableId = (int) (Math.random() * 10) % 10;
-                flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40, tableId);
+                flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, tableId);
                 installFlowRule(flowRule);
                 count++;
             }
@@ -271,6 +281,46 @@ public class FlowRuleInstall {
     }
 
     public void generateFlowRule3() {
-
+        IpPrefix ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.1.1"), 16);
+        IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
+        byte proto = IPv4.PROTOCOL_TCP;
+        TpPort tcpSrc = TpPort.tpPort(1024);
+        TpPort tcpSrcMask = TpPort.tpPort(0xFFFF);
+        TpPort tcpDst = TpPort.tpPort(1024);
+        TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
+        TrafficSelector trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(1));
+        FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
+        installFlowRule(flowRule);
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.2.1"), 32);
+        trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        trafficTreatment = outputTreatment(PortNumber.portNumber(2));
+        flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
+        installFlowRule(flowRule);
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.3.1"), 24);
+        trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        trafficTreatment = outputTreatment(PortNumber.portNumber(3));
+        flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 1);
+        installFlowRule(flowRule);
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.3.8"), 32);
+        trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        trafficTreatment = outputTreatment(PortNumber.portNumber(4));
+        flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 1);
+        installFlowRule(flowRule);
     }
 }

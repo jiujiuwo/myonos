@@ -152,7 +152,7 @@ public class HeaderSpaceUtil {
 
     /*
     如果交集为空，则返回0
-    如果交集非空，部分相交返回1，Rx包含Ry返回2，Ry包含Rx返回3
+    如果交集非空，部分相交返回1，Rx包含Ry返回3，Ry包含Rx返回2
  */
     public static int headerSpaceConflictCheck(byte[] rxBytes, byte[] ryBytes) {
         if (rxBytes.length != ryBytes.length) {
@@ -178,6 +178,8 @@ public class HeaderSpaceUtil {
             return 2;
         } else if (sameWithRy) {
             return 3;
+        } else if (sameWithRx && sameWithRy) {
+            return 4;
         } else {
             return 1;
         }

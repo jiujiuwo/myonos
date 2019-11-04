@@ -396,14 +396,14 @@ public class FlowRuleManager
         if (algorithmChosen == 1) {
             Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
             for (FlowRule flowRule : flowRules) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen, log);
-                //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+                log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
             }
         } else if (algorithmChosen == 2) {
             List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
             for (FlowRule flowRule : flowRules) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen, log);
-                //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+                log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
             }
         }
 
