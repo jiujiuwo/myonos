@@ -223,7 +223,7 @@ public class FlowRuleInstall {
             e.printStackTrace();
         }
         int count = 0;
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 100; i++) {
             for (int j = 1; j <= 100; j++) {
                 int random = (int) (Math.random() * 10);
                 if (random % 2 == 0) {
@@ -319,6 +319,17 @@ public class FlowRuleInstall {
         }
         ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.3.8"), 32);
         trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
+        trafficTreatment = outputTreatment(PortNumber.portNumber(4));
+        flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 1);
+        installFlowRule(flowRule);
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.3.8"), 32);
+        tcpSrcMask = TpPort.tpPort(0);
+        trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrcMask, tcpSrcMask, tcpDst, tcpDstMask);
         trafficTreatment = outputTreatment(PortNumber.portNumber(4));
         flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 1);
         installFlowRule(flowRule);

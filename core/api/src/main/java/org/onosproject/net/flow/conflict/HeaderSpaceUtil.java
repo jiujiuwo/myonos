@@ -61,7 +61,7 @@ public class HeaderSpaceUtil {
             StringBuffer result = new StringBuffer();
 
             for (int i = 0; i < 16; i++) {
-                if (masked.charAt(i) == 0) {
+                if (masked.charAt(i) == '0') {
                     result.append("x");
                 } else {
                     result.append(tcpPort.charAt(i));
@@ -106,7 +106,7 @@ public class HeaderSpaceUtil {
             StringBuffer result = new StringBuffer();
 
             for (int i = 0; i < 16; i++) {
-                if (masked.charAt(i) == 0) {
+                if (masked.charAt(i) == '0') {
                     result.append("x");
                 } else {
                     result.append(udpPort.charAt(i));
