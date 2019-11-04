@@ -49,8 +49,6 @@ public class HeaderSpaceUtil {
 
             String tcpPortString = Integer.toBinaryString(tcpPortCriterion.tcpPort().toInt());
             String tcpPortMaskString = Integer.toBinaryString(tcpPortCriterion.mask().toInt());
-            int tcpPortMask = Integer.bitCount(tcpPortCriterion.mask().toInt());
-
             for (int i = 0; i < 16 - tcpPortString.length(); i++) {
                 tcpPort.append("0");
             }
@@ -96,8 +94,6 @@ public class HeaderSpaceUtil {
 
             String udpPortString = Integer.toBinaryString(udpPortCriterion.udpPort().toInt());
             String udpPortMaskString = Integer.toBinaryString(udpPortCriterion.mask().toInt());
-            int udpPortMask = Integer.bitCount(udpPortCriterion.mask().toInt());
-
             for (int i = 0; i < 16 - udpPortString.length(); i++) {
                 udpPort.append("0");
             }
