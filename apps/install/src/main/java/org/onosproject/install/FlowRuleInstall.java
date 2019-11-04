@@ -249,7 +249,6 @@ public class FlowRuleInstall {
         TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(666));
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
         installFlowRule(flowRule);
-        int tableId = (int) (Math.random() * 10) % 10;
         int count = 0;
         for (int i = 1; i <= 10; i++) {
             for (int j = 1; j <= 100; j++) {
@@ -262,6 +261,7 @@ public class FlowRuleInstall {
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
                 trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
+                int tableId = (int) (Math.random() * 10) % 10;
                 flowRule = createFlowRule(trafficTreatment, trafficSelector, DeviceId.deviceId("of:0000000000000001"), 40, tableId);
                 installFlowRule(flowRule);
                 count++;

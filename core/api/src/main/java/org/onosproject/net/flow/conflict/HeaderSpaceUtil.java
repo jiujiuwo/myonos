@@ -33,38 +33,46 @@ public class HeaderSpaceUtil {
 
     //将TCP Port Criterion 转换为HeaderSpace
     public static String tcpPortToHeaderSpace(TcpPortCriterion tcpPortCriterion) {
-        StringBuilder result = new StringBuilder();
+        StringBuffer tcpPort = new StringBuffer();
+        StringBuffer masked = new StringBuffer();
         //tcp port 16 bit
         if (tcpPortCriterion.type().equals(Criterion.Type.TCP_SRC) ||
                 tcpPortCriterion.type().equals(Criterion.Type.TCP_DST)) {
             String tcpPortString = Integer.toBinaryString(tcpPortCriterion.tcpPort().toInt());
             for (int i = 0; i < 16 - tcpPortString.length(); i++) {
-                result.append("0");
+                tcpPort.append("0");
             }
-            result.append(tcpPortString);
-            return result.toString();
+            tcpPort.append(tcpPortString);
+            return tcpPort.toString();
         } else if (tcpPortCriterion.type().equals(Criterion.Type.TCP_SRC_MASKED) ||
                 tcpPortCriterion.type().equals(Criterion.Type.TCP_DST_MASKED)) {
 
             String tcpPortString = Integer.toBinaryString(tcpPortCriterion.tcpPort().toInt());
+            String tcpPortMaskString = Integer.toBinaryString(tcpPortCriterion.mask().toInt());
             int tcpPortMask = Integer.bitCount(tcpPortCriterion.mask().toInt());
 
-
             for (int i = 0; i < 16 - tcpPortString.length(); i++) {
-                result.append("0");
+                tcpPort.append("0");
             }
-            result.append(tcpPortString);
-
-            StringBuilder xxx = new StringBuilder();
-
-            for (int i = 0; i < 16 - tcpPortMask; i++) {
-                xxx.append("x");
+            tcpPort.append(tcpPortString);
+            for (int i = 0; i < 16 - tcpPortMaskString.length(); i++) {
+                masked.append("0");
             }
+            masked.append(tcpPortMaskString);
 
-            result.replace(16 - tcpPortMask, result.length(), xxx.toString());
+            StringBuffer result = new StringBuffer();
+
+            for (int i = 0; i < 16; i++) {
+                if (masked.charAt(i) == 0) {
+                    result.append("x");
+                } else {
+                    result.append(tcpPort.charAt(i));
+                }
+            }
 
             return result.toString();
         } else {
+            StringBuffer result = new StringBuffer();
             result.append("xxxxxxxxxxxxxxxx");
             return result.toString();
         }
@@ -72,41 +80,51 @@ public class HeaderSpaceUtil {
 
     //将UDP Port Criterion 转换为HeaderSpace
     public static String udpPortToHeaderSpace(UdpPortCriterion udpPortCriterion) {
-        StringBuilder result = new StringBuilder();
-        //udp port 16 bit
-        if (udpPortCriterion.type().equals(Criterion.Type.TCP_SRC) ||
+        StringBuffer udpPort = new StringBuffer();
+        StringBuffer masked = new StringBuffer();
+        //tcp port 16 bit
+        if (udpPortCriterion.type().equals(Criterion.Type.UDP_SRC) ||
                 udpPortCriterion.type().equals(Criterion.Type.UDP_DST)) {
             String tcpPortString = Integer.toBinaryString(udpPortCriterion.udpPort().toInt());
-            for (int i = 0; i < 16 - tcpPortString.length(); i++) {
-                result.append("0");
+            for (int i = 0; i < 16 - udpPort.length(); i++) {
+                udpPort.append("0");
             }
-            result.append(tcpPortString);
-            return result.toString();
+            udpPort.append(tcpPortString);
+            return udpPort.toString();
         } else if (udpPortCriterion.type().equals(Criterion.Type.UDP_SRC_MASKED) ||
                 udpPortCriterion.type().equals(Criterion.Type.UDP_DST_MASKED)) {
 
             String udpPortString = Integer.toBinaryString(udpPortCriterion.udpPort().toInt());
+            String udpPortMaskString = Integer.toBinaryString(udpPortCriterion.mask().toInt());
             int udpPortMask = Integer.bitCount(udpPortCriterion.mask().toInt());
 
             for (int i = 0; i < 16 - udpPortString.length(); i++) {
-                result.append("0");
+                udpPort.append("0");
             }
-            result.append(udpPortString);
-
-            StringBuilder xxx = new StringBuilder();
-
-            for (int i = 0; i < 16 - udpPortMask; i++) {
-                xxx.append("x");
+            udpPort.append(udpPortString);
+            for (int i = 0; i < 16 - udpPortMaskString.length(); i++) {
+                masked.append("0");
             }
+            masked.append(udpPortMaskString);
 
-            result.replace(16 - udpPortMask, result.length(), xxx.toString());
+            StringBuffer result = new StringBuffer();
+
+            for (int i = 0; i < 16; i++) {
+                if (masked.charAt(i) == 0) {
+                    result.append("x");
+                } else {
+                    result.append(udpPort.charAt(i));
+                }
+            }
 
             return result.toString();
         } else {
+            StringBuffer result = new StringBuffer();
             result.append("xxxxxxxxxxxxxxxx");
             return result.toString();
         }
     }
+
 
     public static int headerSpaceUnion(String x, String y) {
         byte[] xBytes = hsStringToBytes(x);
