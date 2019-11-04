@@ -261,7 +261,7 @@ public class FlowRuleInstall {
         }
         int count = 0;
         for (int i = 1; i <= 10; i++) {
-            for (int j = 1; j <= 100; j++) {
+            for (int j = 1; j <= 10; j++) {
                 int random = (int) (Math.random() * 10);
                 if (random % 2 == 0) {
                     proto = IPv4.PROTOCOL_TCP;

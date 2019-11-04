@@ -68,15 +68,16 @@ public class ConflictCheck {
             int result = HeaderSpaceUtil.headerSpaceConflictCheck(rxFlowRule.getHsBytes(), ryFLowRule.getHsBytes());
             if (result == 1) {
                 relation = relations.CORRELATED;
-            } else if (result == 2) {
-                relation = relations.SUBSET;
             } else if (result == 3) {
+                relation = relations.SUBSET;
+            } else if (result == 2) {
                 relation = relations.SUPERSET;
             } else if (result == 4) {
                 relation = relations.EXACT;
             }
-            insCon = instructionConflictCheckOld(rxFlowRule, ryFLowRule);
+            insCon = instructionConflictCheck(rxFlowRule, ryFLowRule);
         }
+
         if (relation == relations.CORRELATED && insCon) {
             return anomals.CORRELATION;
         } else if (relation == relations.SUPERSET) {
