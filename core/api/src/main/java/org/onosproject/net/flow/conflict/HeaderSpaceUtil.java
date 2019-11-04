@@ -11,11 +11,11 @@ public class HeaderSpaceUtil {
         StringBuffer result = new StringBuffer();
 
         //根据IPCriterion 拿到IP的byte数组和prefix
-        byte[] ipSrcBytes = ipCriterion.ip().address().toOctets();
+        String[] array = ipCriterion.ip().address().toString().split("\\.");
         int ipSrcPrefixLength = ipCriterion.ip().prefixLength();
 
-        for (byte b : ipSrcBytes) {
-            String tmpString = Integer.toBinaryString(b);
+        for (String tmp : array) {
+            String tmpString = Integer.toBinaryString(Integer.parseInt(tmp));
             for (int i = 0; i < 8 - tmpString.length(); i++) {
                 result.append("0");
             }

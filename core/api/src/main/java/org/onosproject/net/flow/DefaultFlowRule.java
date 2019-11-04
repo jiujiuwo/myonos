@@ -118,10 +118,9 @@ public class DefaultFlowRule implements FlowRule {
 
         // todo rewrite the toString method
         //this.hsString = selector.toString();
-/*
+
         this.hsString = selectorTranslate(selector);
         this.hsBytes = HeaderSpaceUtil.hsStringToBytes(this.hsString);
-*/
 
 
         //FIXME: fields below will be removed.
