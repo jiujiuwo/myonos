@@ -289,7 +289,7 @@ public class FlowRuleInstall {
         TpPort tcpDst = TpPort.tpPort(1024);
         TpPort tcpDstMask = TpPort.tpPort(0xFFFF);
         TrafficSelector trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
-        TrafficTreatment trafficTreatment = outputTreatment(PortNumber.portNumber(1));
+        TrafficTreatment trafficTreatment = tableTreatment(1);
         FlowRule flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 0);
         installFlowRule(flowRule);
         try {
