@@ -556,6 +556,11 @@ public class IntentTestsMocks {
         }
 
         @Override
+        public long created() {
+            return 0;
+        }
+
+        @Override
         public int tableId() {
             return tableId.id();
         }

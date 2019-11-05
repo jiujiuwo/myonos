@@ -46,18 +46,19 @@ public interface FlowRule extends PiTranslatable {
 
         /**
          * Covert short to enum.
-         * @return reason in enum
+         *
          * @param reason remove reason in integer
+         * @return reason in enum
          */
         public static FlowRemoveReason parseShort(short reason) {
             switch (reason) {
-                case -1 :
+                case -1:
                     return NO_REASON;
                 case 0:
                     return IDLE_TIMEOUT;
                 case 1:
                     return HARD_TIMEOUT;
-                case 2 :
+                case 2:
                     return DELETE;
                 case 3:
                     return GROUP_DELETE;
@@ -65,7 +66,7 @@ public interface FlowRule extends PiTranslatable {
                     return METER_DELETE;
                 case 5:
                     return EVICTION;
-                default :
+                default:
                     return NO_REASON;
             }
         }
@@ -133,6 +134,7 @@ public interface FlowRule extends PiTranslatable {
      * Returns the hard timeout for this flow requested by an application.
      * This parameter configure switch's flow hard timeout.
      * In case of controller-switch connection lost, this variable can be useful.
+     *
      * @return integer value of the hard Timeout
      */
     int hardTimeout();
@@ -169,14 +171,14 @@ public interface FlowRule extends PiTranslatable {
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * Equality for flow rules only considers 'match equality'. This means that
      * two flow rules with the same match conditions will be equal, regardless
      * of the treatment or other characteristics of the flow.
      *
-     * @param   obj   the reference object with which to compare.
-     * @return  {@code true} if this object is the same as the obj
-     *          argument; {@code false} otherwise.
+     * @param obj the reference object with which to compare.
+     * @return {@code true} if this object is the same as the obj
+     * argument; {@code false} otherwise.
      */
     boolean equals(Object obj);
 
@@ -201,6 +203,8 @@ public interface FlowRule extends PiTranslatable {
     String getHsString();
 
     byte[] getHsBytes();
+
+    long created();
 
     /**
      * A flowrule builder.
@@ -300,8 +304,9 @@ public interface FlowRule extends PiTranslatable {
 
         /**
          * Sets the idle timeout parameter in flow table.
-         *
+         * <p>
          * Will automatically make it permanent or temporary if the timeout is 0 or not, respectively.
+         *
          * @param timeout an integer
          * @return this
          */
@@ -315,6 +320,7 @@ public interface FlowRule extends PiTranslatable {
 
         /**
          * Sets hard timeout parameter in flow table.
+         *
          * @param timeout an integer
          * @return this
          */
@@ -322,6 +328,7 @@ public interface FlowRule extends PiTranslatable {
 
         /**
          * Sets reason parameter received from switches .
+         *
          * @param reason a short
          * @return this
          */

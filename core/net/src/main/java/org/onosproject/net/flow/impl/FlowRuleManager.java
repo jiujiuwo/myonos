@@ -374,8 +374,8 @@ public class FlowRuleManager
 
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
-
                     FlowRule tmpRule = flowRuleOp.rule();
+                    start = tmpRule.created();
                     DeviceId deviceId = tmpRule.deviceId();
                     ConflictCheck.anomals result = conflictCheck(deviceId, tmpRule);
                 }
@@ -397,13 +397,13 @@ public class FlowRuleManager
             Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-                log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
             }
         } else if (algorithmChosen == 2) {
             List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-                log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
             }
         }
 
