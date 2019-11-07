@@ -35,6 +35,7 @@ import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.driver.DriverService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.flow.conflict.ConflictCheck;
+import org.onosproject.net.flow.conflict.HeaderSpaceUtil;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEntry;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEvent;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchOperation;
@@ -369,6 +370,7 @@ public class FlowRuleManager
         if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
         } else {
+            boolean xiaFa = true;
             long start = System.currentTimeMillis();
             List<Set<FlowRuleOperation>> stages = ops.stages();
 
@@ -379,38 +381,88 @@ public class FlowRuleManager
                         start = tmpRule.created();
                     }
                     DeviceId deviceId = tmpRule.deviceId();
-                    ConflictCheck.anomals result = conflictCheck(deviceId, tmpRule);
+                    xiaFa = conflictCheck(deviceId, tmpRule);
+                    if (!xiaFa) {
+                        break;
+                    }
+                }
+                if (!xiaFa) {
+                    break;
                 }
             }
             long end = System.currentTimeMillis();
             long tmp = end - start;
 
             times.add(tmp);
-
-            operationsService.execute(new FlowOperationsProcessor(ops));
+            if (xiaFa) {
+                operationsService.execute(new FlowOperationsProcessor(ops));
+            } else {
+                ops.callback().onError(ops);
+            }
         }
 
     }
 
-    private ConflictCheck.anomals conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
-        ConflictCheck.anomals result = ConflictCheck.anomals.DISJOINT;
+    private boolean conflictHandle(ConflictCheck.anomals result, FlowRule flowRule, FlowRule tmpRule) {
+        if (result == ConflictCheck.anomals.REDUNDANCY) {
+            if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 2) {
+                return true;
+            } else if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 3) {
+                return false;
+            }
+        } else if (flowRule.priority() == tmpRule.priority()) {
+            if (result == ConflictCheck.anomals.GENERALIZATION || result == ConflictCheck.anomals.CORRELATION) {
+                //Ry的优先级-1
+                FlowRule.Builder flowRuleBuilder = DefaultFlowRule.builder()
+                        .forDevice(tmpRule.deviceId())
+                        .forTable(tmpRule.table())
+                        .withSelector(tmpRule.selector())
+                        .withTreatment(tmpRule.treatment())
+                        .withPriority(tmpRule.priority() - 1)
+                        .fromApp(coreService.getAppId(tmpRule.appId()))
+                        .withIdleTimeout(tmpRule.hardTimeout())
+                        .withHardTimeout(tmpRule.hardTimeout());
+                if (tmpRule.isPermanent()) {
+                    flowRuleBuilder.makePermanent();
+                }
+                tmpRule = flowRuleBuilder.build();
+                return true;
+            } else {
+                return false;
+            }
+        } else if (flowRule.priority() > tmpRule.priority()) {
+            if (result == ConflictCheck.anomals.SHADOWING) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
+        ConflictCheck.anomals result;
 
         if (algorithmChosen == 1) {
             Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
                 //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                if (result != ConflictCheck.anomals.DISJOINT) {
+                    return conflictHandle(result, flowRule, tmpRule);
+                }
             }
         } else if (algorithmChosen == 2) {
             List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-               // log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                // log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                if (result != ConflictCheck.anomals.DISJOINT) {
+                    return conflictHandle(result, flowRule, tmpRule);
+                }
+
             }
         }
 
-
-        return result;
+        return true;
     }
 
     @Override
