@@ -269,9 +269,6 @@ public class ConflictCheck {
         Instructions.NoActionInstruction ryNoAction = null;
         Instructions.TableTypeTransition rxTable = null;
         Instructions.TableTypeTransition ryTable = null;
-        //meter指令用来进行QoS,与转发冲突无关
-        Instructions.MeterInstruction rxMeter = null;
-        Instructions.MeterInstruction ryMeter = null;
 
         for (Instruction instruction : rxIns.allInstructions()) {
             if (instruction instanceof Instructions.OutputInstruction) {
@@ -295,8 +292,8 @@ public class ConflictCheck {
                 ryTable = (Instructions.TableTypeTransition) instruction;
             }
         }
-        if (rxOutput != null && ryOutput != null) {
-            if (rxOutput.port().equals(ryOutput.port())) {
+        if (rxTable != null && ryTable != null) {
+            if (rxTable.tableId().equals(ryTable.tableId())) {
                 return false;
             } else {
                 return true;
@@ -307,17 +304,17 @@ public class ConflictCheck {
             } else {
                 return true;
             }
-        } else if (rxNoAction != null && ryNoAction != null) {
-            return false;
-        } else if (rxTable != null && ryTable != null) {
-            if (rxTable.tableId().equals(ryTable.tableId())) {
+        } else if (rxOutput != null && ryOutput != null) {
+            if (rxOutput.port().equals(ryOutput.port())) {
                 return false;
             } else {
                 return true;
             }
-        } else {
+        } else if (rxNoAction != null && ryNoAction != null) {
+            return false;
+        } else
             return true;
-        }
+
 
     }
 

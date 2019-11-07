@@ -168,7 +168,7 @@ public class FlowRuleInstall {
     public void generateFlowRule2(int m, int n) {
         IpPrefix ipSrcPrefix;
         IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
-        byte proto = IPv4.PROTOCOL_TCP;
+        byte proto;
         TpPort tcpSrc = TpPort.tpPort(1024);
         TpPort tcpSrcMask = TpPort.tpPort(0xFFFF);
         TpPort tcpDst = TpPort.tpPort(1024);
