@@ -13,12 +13,18 @@ public class FlowRuleInstallCommand extends AbstractShellCommand {
     @Argument(index = 0, name = "conflictFields", description = "",
             required = true, multiValued = false)
     int conflictFields = 0;
+    @Argument(index = 1, name = "m", description = "",
+            required = false, multiValued = false)
+    int m;
+    @Argument(index = 2, name = "n", description = "",
+            required = false, multiValued = false)
+    int n;
 
     @Override
     protected void doExecute() {
         FlowRuleInstall flowRuleInstallService = AbstractShellCommand.get(FlowRuleInstall.class);
         long start = System.currentTimeMillis();
-        flowRuleInstallService.runTest(conflictFields);
+        flowRuleInstallService.runTest(conflictFields, m, n);
         long end = System.currentTimeMillis();
         System.out.println("FlowRule Install command " + (end - start));
         System.out.println(flowRuleInstallService.getTimes().toString());

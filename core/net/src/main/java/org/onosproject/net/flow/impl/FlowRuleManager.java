@@ -161,6 +161,7 @@ public class FlowRuleManager
         deviceService.addListener(deviceListener);
         cfgService.registerProperties(getClass());
         idGenerator = coreService.getIdGenerator(FLOW_OP_TOPIC);
+        Collections.synchronizedList(times);
         log.info("Started");
     }
 
@@ -370,23 +371,25 @@ public class FlowRuleManager
         if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
         } else {
-            boolean xiaFa = true;
+            int xiaFa = 1;
             long start = System.currentTimeMillis();
             List<Set<FlowRuleOperation>> stages = ops.stages();
-
+            FlowRule tmpRule = null;
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
-                    FlowRule tmpRule = flowRuleOp.rule();
-                    if (algorithmChosen == 2) {
-                        start = tmpRule.created();
-                    }
-                    DeviceId deviceId = tmpRule.deviceId();
-                    xiaFa = conflictCheck(deviceId, tmpRule);
-                    if (!xiaFa) {
-                        break;
+                    tmpRule = flowRuleOp.rule();
+                    if (tmpRule.appId() != coreService.getAppId("org.onosproject.core").id()) {
+                        if (algorithmChosen == 2) {
+                            start = tmpRule.created();
+                        }
+                        DeviceId deviceId = tmpRule.deviceId();
+                        xiaFa = conflictCheck(deviceId, tmpRule);
+                        if (xiaFa != 1) {
+                            break;
+                        }
                     }
                 }
-                if (!xiaFa) {
+                if (xiaFa != 1) {
                     break;
                 }
             }
@@ -394,8 +397,23 @@ public class FlowRuleManager
             long tmp = end - start;
 
             times.add(tmp);
-            if (xiaFa) {
-                operationsService.execute(new FlowOperationsProcessor(ops));
+            if (xiaFa > 0) {
+                if (xiaFa == 2 && tmpRule != null) {
+                    FlowRule.Builder flowRuleBuilder = new DefaultFlowRule.Builder();
+                    flowRuleBuilder.forDevice(tmpRule.deviceId())
+                            .fromApp(coreService.getAppId(tmpRule.appId()))
+                            .forTable(tmpRule.table())
+                            .forDevice(tmpRule.deviceId())
+                            .withHardTimeout(tmpRule.hardTimeout())
+                            .withSelector(tmpRule.selector())
+                            .withTreatment(tmpRule.treatment());
+                    tmpRule = flowRuleBuilder.build();
+                    FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
+                    builder.add(tmpRule);
+                    operationsService.execute(new FlowOperationsProcessor(builder.build()));
+                } else {
+                    operationsService.execute(new FlowOperationsProcessor(ops));
+                }
             } else {
                 ops.callback().onError(ops);
             }
@@ -403,42 +421,39 @@ public class FlowRuleManager
 
     }
 
-    private boolean conflictHandle(ConflictCheck.anomals result, FlowRule flowRule, FlowRule tmpRule) {
+    /*
+        1 表示下发
+        0 不下发
+        2 表示 删除
+     */
+    private int conflictHandle(ConflictCheck.anomals result, FlowRule flowRule, FlowRule tmpRule) {
         if (result == ConflictCheck.anomals.REDUNDANCY) {
             if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 2) {
-                return true;
+                removeFlowRules(flowRule);
+                return 1;
             } else if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 3) {
-                return false;
+                return 0;
             }
         } else if (flowRule.priority() == tmpRule.priority()) {
             if (result == ConflictCheck.anomals.GENERALIZATION || result == ConflictCheck.anomals.CORRELATION) {
                 //Ry的优先级-1
-                FlowRule.Builder flowRuleBuilder = DefaultFlowRule.builder()
-                        .forDevice(tmpRule.deviceId())
-                        .forTable(tmpRule.table())
-                        .withSelector(tmpRule.selector())
-                        .withTreatment(tmpRule.treatment())
-                        .withPriority(tmpRule.priority() - 1)
-                        .fromApp(coreService.getAppId(tmpRule.appId()))
-                        .withIdleTimeout(tmpRule.hardTimeout())
-                        .withHardTimeout(tmpRule.hardTimeout());
-                if (tmpRule.isPermanent()) {
-                    flowRuleBuilder.makePermanent();
-                }
-                tmpRule = flowRuleBuilder.build();
-                return true;
+                return 2;
             } else {
-                return false;
+                return 0;
             }
         } else if (flowRule.priority() > tmpRule.priority()) {
             if (result == ConflictCheck.anomals.SHADOWING) {
-                return false;
+                return 0;
+            }
+        } else {
+            if (result == ConflictCheck.anomals.GENERALIZATION) {
+                removeFlowRules(flowRule);
             }
         }
-        return true;
+        return 1;
     }
 
-    private boolean conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
+    private int conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
         ConflictCheck.anomals result;
 
         if (algorithmChosen == 1) {
@@ -462,7 +477,7 @@ public class FlowRuleManager
             }
         }
 
-        return true;
+        return 1;
     }
 
     @Override
