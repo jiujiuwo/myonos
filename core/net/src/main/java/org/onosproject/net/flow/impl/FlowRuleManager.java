@@ -378,16 +378,18 @@ public class FlowRuleManager
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     tmpRule = flowRuleOp.rule();
-                    if (tmpRule.appId() != coreService.getAppId("org.onosproject.core").id()) {
-                        if (algorithmChosen == 2) {
-                            start = tmpRule.created();
-                        }
-                        DeviceId deviceId = tmpRule.deviceId();
-                        xiaFa = conflictCheck(deviceId, tmpRule);
-                        if (xiaFa != 1) {
-                            break;
-                        }
+
+                    if (algorithmChosen == 2) {
+                        start = tmpRule.created();
                     }
+                    DeviceId deviceId = tmpRule.deviceId();
+                    if (flowRuleOp.type().equals(FlowRuleOperation.Type.ADD)) {
+                        xiaFa = conflictCheck(deviceId, tmpRule);
+                    }
+                    if (xiaFa != 1) {
+                        break;
+                    }
+
                 }
                 if (xiaFa != 1) {
                     break;
@@ -429,7 +431,9 @@ public class FlowRuleManager
     private int conflictHandle(ConflictCheck.anomals result, FlowRule flowRule, FlowRule tmpRule) {
         if (result == ConflictCheck.anomals.REDUNDANCY) {
             if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 2) {
-                removeFlowRules(flowRule);
+                FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
+                builder.remove(flowRule);
+                operationsService.execute(new FlowOperationsProcessor(builder.build()));
                 return 1;
             } else if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 3) {
                 return 0;
@@ -437,6 +441,9 @@ public class FlowRuleManager
         } else if (flowRule.priority() == tmpRule.priority()) {
             if (result == ConflictCheck.anomals.GENERALIZATION || result == ConflictCheck.anomals.CORRELATION) {
                 //Ry的优先级-1
+                FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
+                builder.remove(flowRule);
+                operationsService.execute(new FlowOperationsProcessor(builder.build()));
                 return 2;
             } else {
                 return 0;
@@ -447,7 +454,9 @@ public class FlowRuleManager
             }
         } else {
             if (result == ConflictCheck.anomals.GENERALIZATION) {
-                removeFlowRules(flowRule);
+                FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
+                builder.remove(flowRule);
+                operationsService.execute(new FlowOperationsProcessor(builder.build()));
             }
         }
         return 1;
@@ -461,7 +470,7 @@ public class FlowRuleManager
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
                 if (result != ConflictCheck.anomals.DISJOINT) {
-                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                    //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
                     return conflictHandle(result, flowRule, tmpRule);
                 }
             }
@@ -470,7 +479,7 @@ public class FlowRuleManager
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
                 if (result != ConflictCheck.anomals.DISJOINT) {
-                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                    //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
                     return conflictHandle(result, flowRule, tmpRule);
                 }
 

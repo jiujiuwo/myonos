@@ -174,12 +174,12 @@ public class HeaderSpaceUtil {
             }
         }
 
-        if (sameWithRx) {
-            return 2;
+        if (sameWithRx && sameWithRy) {
+            return 4;
         } else if (sameWithRy) {
             return 3;
-        } else if (sameWithRx && sameWithRy) {
-            return 4;
+        } else if (sameWithRx) {
+            return 2;
         } else {
             return 1;
         }
