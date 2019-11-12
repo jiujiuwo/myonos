@@ -150,7 +150,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
-    private int algorithmChosen = 0;
+    private int algorithmChosen = 1;
     private static List<Long> times = new LinkedList<>();
 
     @Activate
@@ -435,15 +435,12 @@ public class FlowRuleManager
                 builder.remove(flowRule);
                 operationsService.execute(new FlowOperationsProcessor(builder.build()));
                 return 1;
-            } else if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 3) {
+            } else {
                 return 0;
             }
         } else if (flowRule.priority() == tmpRule.priority()) {
             if (result == ConflictCheck.anomals.GENERALIZATION || result == ConflictCheck.anomals.CORRELATION) {
                 //Ry的优先级-1
-                FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
-                builder.remove(flowRule);
-                operationsService.execute(new FlowOperationsProcessor(builder.build()));
                 return 2;
             } else {
                 return 0;
@@ -457,6 +454,7 @@ public class FlowRuleManager
                 FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
                 builder.remove(flowRule);
                 operationsService.execute(new FlowOperationsProcessor(builder.build()));
+                return 1;
             }
         }
         return 1;
@@ -470,7 +468,7 @@ public class FlowRuleManager
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
                 if (result != ConflictCheck.anomals.DISJOINT) {
-                    //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
                     return conflictHandle(result, flowRule, tmpRule);
                 }
             }
@@ -479,7 +477,7 @@ public class FlowRuleManager
             for (FlowRule flowRule : flowRules) {
                 result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
                 if (result != ConflictCheck.anomals.DISJOINT) {
-                    //log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
                     return conflictHandle(result, flowRule, tmpRule);
                 }
 
