@@ -35,6 +35,8 @@ import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.driver.DriverService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.flow.conflict.ConflictCheck;
+import org.onosproject.net.flow.conflict.ConflictRules;
+import org.onosproject.net.flow.conflict.HandlerType;
 import org.onosproject.net.flow.conflict.HeaderSpaceUtil;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEntry;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEvent;
@@ -378,10 +380,6 @@ public class FlowRuleManager
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     tmpRule = flowRuleOp.rule();
-
-                    if (algorithmChosen == 2) {
-                        start = tmpRule.created();
-                    }
                     DeviceId deviceId = tmpRule.deviceId();
                     if (flowRuleOp.type().equals(FlowRuleOperation.Type.ADD)) {
                         xiaFa = conflictCheck(deviceId, tmpRule);
@@ -460,6 +458,46 @@ public class FlowRuleManager
         return 1;
     }
 
+    private ConflictRules mtConflictHandleCheck(ConflictCheck.anomals anomals, FlowRule flowRule, FlowRule tmpRule) {
+        ConflictRules conflictRules = new ConflictRules();
+        conflictRules.setFlowRule(flowRule);
+        conflictRules.setTmpRule(tmpRule);
+        if (anomals == ConflictCheck.anomals.REDUNDANCY) {
+            if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 2) {
+                conflictRules.setHandlerType(HandlerType.RemoveAndInstall);
+                return conflictRules;
+            } else {
+                conflictRules.setHandlerType(HandlerType.Reject);
+                return conflictRules;
+            }
+        } else if (flowRule.priority() == tmpRule.priority()) {
+            if (anomals == ConflictCheck.anomals.GENERALIZATION || anomals == ConflictCheck.anomals.CORRELATION) {
+                //Ry的优先级-1
+                conflictRules.setHandlerType(HandlerType.DecreasePriorityAndInstall);
+                return conflictRules;
+            } else {
+                conflictRules.setHandlerType(HandlerType.Reject);
+                return conflictRules;
+            }
+        } else if (flowRule.priority() > tmpRule.priority()) {
+            if (anomals == ConflictCheck.anomals.SHADOWING) {
+                conflictRules.setHandlerType(HandlerType.Reject);
+                return conflictRules;
+            } else {
+                conflictRules.setHandlerType(HandlerType.Install);
+                return conflictRules;
+            }
+        } else {
+            if (anomals == ConflictCheck.anomals.GENERALIZATION) {
+                conflictRules.setHandlerType(HandlerType.RemoveAndInstall);
+                return conflictRules;
+            } else {
+                conflictRules.setHandlerType(HandlerType.Install);
+                return conflictRules;
+            }
+        }
+    }
+
     private int conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
         ConflictCheck.anomals result;
 
@@ -485,6 +523,37 @@ public class FlowRuleManager
         }
 
         return 1;
+    }
+
+    private void mtConflictCheck(DeviceId deviceId, FlowRule tmpRule) {
+        Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
+        boolean reject = false;
+        List<ConflictRules> installs = new ArrayList<>();
+        List<ConflictRules> removes = new ArrayList<>();
+        List<ConflictRules> decreases = new ArrayList<>();
+        for (FlowRule flowRule : flowRules) {
+            ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+            if (result != ConflictCheck.anomals.DISJOINT) {
+                ConflictRules conflictRules = mtConflictHandleCheck(result, flowRule, tmpRule);
+                if (conflictRules.getHandlerType() == HandlerType.Reject) {
+                    reject = true;
+                    break;
+                } else if (conflictRules.getHandlerType() == HandlerType.Install) {
+                    installs.add(conflictRules);
+                } else if (conflictRules.getHandlerType() == HandlerType.RemoveAndInstall) {
+                    removes.add(conflictRules);
+                } else {
+                    decreases.add(conflictRules);
+                }
+            } else {
+
+            }
+        }
+        if (reject) {
+
+        } else {
+
+        }
     }
 
     @Override
