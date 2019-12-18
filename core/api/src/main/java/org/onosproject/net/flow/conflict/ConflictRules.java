@@ -8,6 +8,9 @@ public class ConflictRules {
     private FlowRule tmpRule;
     private FlowRule flowRule;
 
+    public ConflictRules() {
+    }
+
     public ConflictRules(FlowRule tmpRule, FlowRule flowRule, HandlerType handlerType) {
         this.flowRule = flowRule;
         this.tmpRule = tmpRule;

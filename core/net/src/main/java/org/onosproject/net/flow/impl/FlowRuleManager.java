@@ -421,12 +421,38 @@ public class FlowRuleManager
         }
     }
 
+    private int conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
+        ConflictCheck.anomals result;
+
+        if (algorithmChosen == 1) {
+            Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
+            for (FlowRule flowRule : flowRules) {
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+                if (result != ConflictCheck.anomals.DISJOINT) {
+                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                    return adrsConflictHandle(result, flowRule, tmpRule);
+                }
+            }
+        } else if (algorithmChosen == 2) {
+            List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
+            for (FlowRule flowRule : flowRules) {
+                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+                if (result != ConflictCheck.anomals.DISJOINT) {
+                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
+                    return adrsConflictHandle(result, flowRule, tmpRule);
+                }
+            }
+        }
+
+        return 1;
+    }
+
     /*
         1 表示下发
         0 不下发
         2 表示 删除
      */
-    private int conflictHandle(ConflictCheck.anomals result, FlowRule flowRule, FlowRule tmpRule) {
+    private int adrsConflictHandle(ConflictCheck.anomals result, FlowRule flowRule, FlowRule tmpRule) {
         if (result == ConflictCheck.anomals.REDUNDANCY) {
             if (HeaderSpaceUtil.headerSpaceUnion(flowRule.getHsString(), tmpRule.getHsString()) == 2) {
                 FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
@@ -456,6 +482,65 @@ public class FlowRuleManager
             }
         }
         return 1;
+    }
+
+    private void mtConflictCheck(DeviceId deviceId, FlowRule tmpRule, FlowRuleOperations ops) {
+        Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
+        boolean reject = false;
+        List<ConflictRules> installs = new ArrayList<>();
+        List<ConflictRules> removes = new ArrayList<>();
+        List<ConflictRules> decreases = new ArrayList<>();
+        //规则冲突检测
+        for (FlowRule flowRule : flowRules) {
+            ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+            if (result != ConflictCheck.anomals.DISJOINT) {
+                ConflictRules conflictRules = mtConflictHandleCheck(result, flowRule, tmpRule);
+                if (conflictRules.getHandlerType() == HandlerType.Reject) {
+                    reject = true;
+                    break;
+                } else if (conflictRules.getHandlerType() == HandlerType.Install) {
+                    installs.add(conflictRules);
+                } else if (conflictRules.getHandlerType() == HandlerType.RemoveAndInstall) {
+                    removes.add(conflictRules);
+                } else {
+                    decreases.add(conflictRules);
+                }
+            }
+        }
+
+        //冲突处理
+        if (reject) {
+            ops.callback().onError(ops);
+        } else {
+            //删除冗余的规则
+            for (ConflictRules conflictRules : removes) {
+                FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
+                builder.remove(conflictRules.getFlowRule());
+                operationsService.execute(new FlowOperationsProcessor(builder.build()));
+            }
+            //交集冲突的规则减小优先级
+            int minPriority = Integer.MAX_VALUE;
+            for (ConflictRules conflictRules : decreases) {
+                int tmpP = conflictRules.getFlowRule().priority();
+                if (minPriority > tmpP) {
+                    minPriority = tmpP - 1;
+                }
+            }
+            //下发规则
+            FlowRule.Builder flowRuleBuilder = new DefaultFlowRule.Builder();
+            flowRuleBuilder.forDevice(tmpRule.deviceId())
+                    .fromApp(coreService.getAppId(tmpRule.appId()))
+                    .forTable(tmpRule.table())
+                    .forDevice(tmpRule.deviceId())
+                    .withHardTimeout(tmpRule.hardTimeout())
+                    .withSelector(tmpRule.selector())
+                    .withTreatment(tmpRule.treatment())
+                    .withPriority(minPriority);
+            tmpRule = flowRuleBuilder.build();
+            FlowRuleOperations.Builder builder = FlowRuleOperations.builder();
+            builder.add(tmpRule);
+            operationsService.execute(new FlowOperationsProcessor(builder.build()));
+        }
     }
 
     private ConflictRules mtConflictHandleCheck(ConflictCheck.anomals anomals, FlowRule flowRule, FlowRule tmpRule) {
@@ -495,64 +580,6 @@ public class FlowRuleManager
                 conflictRules.setHandlerType(HandlerType.Install);
                 return conflictRules;
             }
-        }
-    }
-
-    private int conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
-        ConflictCheck.anomals result;
-
-        if (algorithmChosen == 1) {
-            Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
-            for (FlowRule flowRule : flowRules) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-                if (result != ConflictCheck.anomals.DISJOINT) {
-                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
-                    return conflictHandle(result, flowRule, tmpRule);
-                }
-            }
-        } else if (algorithmChosen == 2) {
-            List<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
-            for (FlowRule flowRule : flowRules) {
-                result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-                if (result != ConflictCheck.anomals.DISJOINT) {
-                    log.info(result + "\n" + tmpRule.toString() + "\n" + flowRule.toString());
-                    return conflictHandle(result, flowRule, tmpRule);
-                }
-
-            }
-        }
-
-        return 1;
-    }
-
-    private void mtConflictCheck(DeviceId deviceId, FlowRule tmpRule) {
-        Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
-        boolean reject = false;
-        List<ConflictRules> installs = new ArrayList<>();
-        List<ConflictRules> removes = new ArrayList<>();
-        List<ConflictRules> decreases = new ArrayList<>();
-        for (FlowRule flowRule : flowRules) {
-            ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
-            if (result != ConflictCheck.anomals.DISJOINT) {
-                ConflictRules conflictRules = mtConflictHandleCheck(result, flowRule, tmpRule);
-                if (conflictRules.getHandlerType() == HandlerType.Reject) {
-                    reject = true;
-                    break;
-                } else if (conflictRules.getHandlerType() == HandlerType.Install) {
-                    installs.add(conflictRules);
-                } else if (conflictRules.getHandlerType() == HandlerType.RemoveAndInstall) {
-                    removes.add(conflictRules);
-                } else {
-                    decreases.add(conflictRules);
-                }
-            } else {
-
-            }
-        }
-        if (reject) {
-
-        } else {
-
         }
     }
 
