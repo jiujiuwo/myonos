@@ -10,7 +10,7 @@ import org.onosproject.cli.AbstractShellCommand;
         description = "install flow rules")
 public class FlowRuleInstallCommand extends AbstractShellCommand {
 
-    @Argument(index = 0, name = "conflictFields", description = "",
+    @Argument(index = 0, name = "methodChosen", description = "",
             required = true, multiValued = false)
     int conflictFields = 0;
     @Argument(index = 1, name = "m", description = "",

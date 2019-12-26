@@ -151,7 +151,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用最大最小值法，3表示自己的算法
-    private int algorithmChosen = 1;
+    private int algorithmChosen = 3;
     private static List<Long> times = new LinkedList<>();
 
     @Activate
@@ -499,14 +499,14 @@ public class FlowRuleManager
     }
 
     private void mtConflictCheck(DeviceId deviceId, FlowRule tmpRule, FlowRuleOperations ops) {
-        Iterable<FlowEntry> flowRules = this.getFlowEntries(deviceId);
+        Iterable<FlowRule> flowRules = getFlowRulesByDeviceAndTable(deviceId, tmpRule.table());
         boolean reject = false;
         List<ConflictRules> installs = new ArrayList<>();
         List<ConflictRules> removes = new ArrayList<>();
         List<ConflictRules> decreases = new ArrayList<>();
         //规则冲突检测
         for (FlowRule flowRule : flowRules) {
-            ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, algorithmChosen);
+            ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, 2);
             if (result != ConflictCheck.anomals.DISJOINT) {
                 ConflictRules conflictRules = mtConflictHandleCheck(result, flowRule, tmpRule);
                 if (conflictRules.getHandlerType() == HandlerType.Reject) {
@@ -533,7 +533,7 @@ public class FlowRuleManager
                 operationsService.execute(new FlowOperationsProcessor(builder.build()));
             }
             //交集冲突的规则减小优先级
-            int minPriority = Integer.MAX_VALUE;
+            int minPriority = tmpRule.priority();
             for (ConflictRules conflictRules : decreases) {
                 int tmpP = conflictRules.getFlowRule().priority();
                 if (minPriority > tmpP) {

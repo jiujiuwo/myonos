@@ -51,14 +51,14 @@ public class FlowRuleInstall {
         log.info("Application FlowRule Install Started", appId.id());
     }
 
-    public void runTest(int conflictFields, int i, int j) {
+    public void runTest(int methodChosen, int i, int j) {
         initDevice();
         //首先生成并下发一个字段相交的规则
-        if (conflictFields == 1) {
+        if (methodChosen == 1) {
             clearTimes();
             flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule1();
-        } else if (conflictFields == 2) {
+        } else if (methodChosen == 2) {
             clearTimes();
             flowRuleService.purgeFlowRules(deviceId);
             generateFlowRule2(i, j);
