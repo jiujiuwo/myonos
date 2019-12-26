@@ -150,7 +150,7 @@ public class FlowRuleManager
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected DriverService driverService;
 
-    //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用自己的算法
+    //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用最大最小值法，3表示自己的算法
     private int algorithmChosen = 1;
     private static List<Long> times = new LinkedList<>();
 
@@ -416,9 +416,10 @@ public class FlowRuleManager
             long tmp = end - start;
 
             times.add(tmp);
-        } else if (algorithmChosen == 2) {
+        } else if (algorithmChosen == 3) {
             List<Set<FlowRuleOperation>> stages = ops.stages();
-            FlowRule tmpRule = null;
+            FlowRule tmpRule;
+            long start = System.currentTimeMillis();
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     tmpRule = flowRuleOp.rule();
@@ -428,6 +429,9 @@ public class FlowRuleManager
                 }
 
             }
+            long end = System.currentTimeMillis();
+            long tmp = end - start;
+            times.add(tmp);
         }
     }
 
