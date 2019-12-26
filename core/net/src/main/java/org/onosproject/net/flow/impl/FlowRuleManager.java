@@ -58,7 +58,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -372,7 +371,7 @@ public class FlowRuleManager
         checkPermission(FLOWRULE_WRITE);
         if (algorithmChosen == 0) {
             operationsService.execute(new FlowOperationsProcessor(ops));
-        } else {
+        } else if (algorithmChosen == 1) {
             int xiaFa = 1;
             long start = System.currentTimeMillis();
             List<Set<FlowRuleOperation>> stages = ops.stages();
@@ -382,12 +381,11 @@ public class FlowRuleManager
                     tmpRule = flowRuleOp.rule();
                     DeviceId deviceId = tmpRule.deviceId();
                     if (flowRuleOp.type().equals(FlowRuleOperation.Type.ADD)) {
-                        xiaFa = conflictCheck(deviceId, tmpRule);
+                        xiaFa = adrsConflictCheck(deviceId, tmpRule);
+                        if (xiaFa != 1) {
+                            break;
+                        }
                     }
-                    if (xiaFa != 1) {
-                        break;
-                    }
-
                 }
                 if (xiaFa != 1) {
                     break;
@@ -418,10 +416,22 @@ public class FlowRuleManager
             long tmp = end - start;
 
             times.add(tmp);
+        } else if (algorithmChosen == 2) {
+            List<Set<FlowRuleOperation>> stages = ops.stages();
+            FlowRule tmpRule = null;
+            for (Set<FlowRuleOperation> flowRuleSet : stages) {
+                for (FlowRuleOperation flowRuleOp : flowRuleSet) {
+                    tmpRule = flowRuleOp.rule();
+                    if (flowRuleOp.type().equals(FlowRuleOperation.Type.ADD)) {
+                        mtConflictCheck(tmpRule.deviceId(), tmpRule, ops);
+                    }
+                }
+
+            }
         }
     }
 
-    private int conflictCheck(DeviceId deviceId, FlowRule tmpRule) {
+    private int adrsConflictCheck(DeviceId deviceId, FlowRule tmpRule) {
         ConflictCheck.anomals result;
 
         if (algorithmChosen == 1) {
