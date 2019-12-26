@@ -536,7 +536,7 @@ public class FlowRuleManager
             int minPriority = tmpRule.priority();
             for (ConflictRules conflictRules : decreases) {
                 int tmpP = conflictRules.getFlowRule().priority();
-                if (minPriority > tmpP) {
+                if (minPriority >= tmpP) {
                     minPriority = tmpP - 1;
                 }
             }
