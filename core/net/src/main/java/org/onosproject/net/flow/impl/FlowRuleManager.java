@@ -506,6 +506,9 @@ public class FlowRuleManager
         List<ConflictRules> decreases = new ArrayList<>();
         //规则冲突检测
         for (FlowRule flowRule : flowRules) {
+            if (flowRule.appId() == coreService.getAppId("*core").id()) {
+                continue;
+            }
             ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, 2);
             if (result != ConflictCheck.anomals.DISJOINT) {
                 ConflictRules conflictRules = mtConflictHandleCheck(result, flowRule, tmpRule);
