@@ -151,7 +151,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用最大最小值法，3表示自己的算法
-    private int algorithmChosen = 3;
+    private int algorithmChosen = 1;
     private static List<Long> times = new LinkedList<>();
 
     @Activate
@@ -417,9 +417,9 @@ public class FlowRuleManager
 
             times.add(tmp);
         } else if (algorithmChosen == 3) {
+            long start = System.currentTimeMillis();
             List<Set<FlowRuleOperation>> stages = ops.stages();
             FlowRule tmpRule;
-            long start = System.currentTimeMillis();
             for (Set<FlowRuleOperation> flowRuleSet : stages) {
                 for (FlowRuleOperation flowRuleOp : flowRuleSet) {
                     tmpRule = flowRuleOp.rule();
@@ -506,7 +506,7 @@ public class FlowRuleManager
         List<ConflictRules> decreases = new ArrayList<>();
         //规则冲突检测
         for (FlowRule flowRule : flowRules) {
-            if (flowRule.appId() == coreService.getAppId("*core").id()) {
+            if (flowRule.appId() == coreService.getAppId("org.onosproject.core").id()) {
                 continue;
             }
             ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, 2);
