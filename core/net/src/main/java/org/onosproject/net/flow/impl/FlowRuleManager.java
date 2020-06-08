@@ -34,10 +34,7 @@ import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.driver.DriverService;
 import org.onosproject.net.flow.*;
-import org.onosproject.net.flow.conflict.ConflictCheck;
-import org.onosproject.net.flow.conflict.ConflictRules;
-import org.onosproject.net.flow.conflict.HandlerType;
-import org.onosproject.net.flow.conflict.HeaderSpaceUtil;
+import org.onosproject.net.flow.conflict.*;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEntry;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchEvent;
 import org.onosproject.net.flow.oldbatch.FlowRuleBatchOperation;
@@ -151,7 +148,7 @@ public class FlowRuleManager
     protected DriverService driverService;
 
     //检测算法的选择 0表示关闭，1表示使用ADRS检测算法，2表示使用最大最小值法，3表示自己的算法
-    private int algorithmChosen = 1;
+    private int algorithmChosen = 3;
     private static List<Long> times = new LinkedList<>();
 
     @Activate
@@ -512,6 +509,7 @@ public class FlowRuleManager
             ConflictCheck.anomals result = ConflictCheck.filedRangeConflictCheck(flowRule, tmpRule, 2);
             if (result != ConflictCheck.anomals.DISJOINT) {
                 ConflictRules conflictRules = mtConflictHandleCheck(result, flowRule, tmpRule);
+                ConflictStore.storeConflict(conflictRules.toString());
                 if (conflictRules.getHandlerType() == HandlerType.Reject) {
                     reject = true;
                     break;

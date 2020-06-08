@@ -40,4 +40,9 @@ public class ConflictRules {
     public void setHandlerType(HandlerType handlerType) {
         this.handlerType = handlerType;
     }
+
+    @Override
+    public String toString() {
+        return tmpRule.toString()+"\n"+flowRule.toString()+"\n"+handlerType.toString();
+    }
 }

@@ -4,6 +4,7 @@ COMPILE_DEPS = COMPILE + NETTY + JACKSON + METRICS + KRYO + [
     "//utils/rest:onlab-rest",
     "@joda_time//jar",
     "@io_netty_netty//jar",
+    "@mapdb//jar",
 ]
 
 osgi_jar_with_tests(

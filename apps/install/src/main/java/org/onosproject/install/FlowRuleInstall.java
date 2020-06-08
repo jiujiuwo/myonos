@@ -179,12 +179,7 @@ public class FlowRuleInstall {
         int count = 0;
         for (int i = 1; i <= m; i++) {
             for (int j = 1; j <= n; j++) {
-                int random = (int) (Math.random() * 10);
-                if (random % 2 == 0) {
-                    proto = IPv4.PROTOCOL_TCP;
-                } else {
-                    proto = IPv4.PROTOCOL_UDP;
-                }
+                proto = IPv4.PROTOCOL_TCP;
                 ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168." + i + "." + j), 32);
                 trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
                 trafficTreatment = outputTreatment(PortNumber.portNumber((int) (Math.random() * 100)));
@@ -198,7 +193,7 @@ public class FlowRuleInstall {
 
 
     public void generateFlowRule1() {
-        IpPrefix ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.1.1"), 16);
+        IpPrefix ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.0.0"), 16);
         IpPrefix ipDstPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.103.104"), 32);
         byte proto = IPv4.PROTOCOL_TCP;
         TpPort tcpSrc = TpPort.tpPort(1024);
@@ -224,7 +219,7 @@ public class FlowRuleInstall {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.3.1"), 24);
+        ipSrcPrefix = Ip4Prefix.valueOf(Ip4Address.valueOf("192.168.3.0"), 24);
         trafficSelector = trafficSelector(proto, ipSrcPrefix, ipDstPrefix, tcpSrc, tcpSrcMask, tcpDst, tcpDstMask);
         trafficTreatment = outputTreatment(PortNumber.portNumber(3));
         flowRule = createFlowRule(trafficTreatment, trafficSelector, deviceId, 40, 1);
